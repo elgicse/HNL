@@ -23,10 +23,10 @@ class HistoHandler():
         self.pMax = math.sqrt(self.ep.protonEnergy**2. - self.pp.MN**2.)
         self.pMin = self.pp.MN
         self.pStep = (self.pMax-self.pMin)/self.binsp
-        self.prodHist = r.TH2F("prodPDF_m%s"%(pp.MN) ,"prodPDF_m%s"%(pp.MN),
+        self.prodHist = r.TH2F("prodPDF_m%s"%(self.pp.MN) ,"prodPDF_m%s"%(self.pp.MN),
             self.binsp,self.pMin-0.5*self.pStep,self.pMax-0.5*self.pStep,
             self.binstheta,self.tmin-0.5*self.thetaStep,self.tmax+0.5*self.thetaStep)
-        self.prodHist.SetTitle("PDF for N production (m_{N}=%s GeV)"%(pp.MN))
+        self.prodHist.SetTitle("PDF for N production (m_{N}=%s GeV)"%(self.pp.MN))
         self.prodHist.GetXaxis().SetTitle("P_{N} [GeV]")
         self.prodHist.GetYaxis().SetTitle("#theta_{N} [rad]")
         # Fill mass histogram
@@ -50,12 +50,12 @@ class HistoHandler():
         ct = self.pp.c*self.pp.NLifetime
         # Prepare the weighted histograms
         self.couplingString = '_'.join([str(ui) for ui in self.pp.U2])
-        self.weightedProdHistVol1 = r.TH2F("weightedPDF_vol1_m%s_couplings%s"%(pp.MN, self.couplingString),
-            "weightedPDF_vol1_m%s_couplings%s"%(pp.MN, self.couplingString),
+        self.weightedProdHistVol1 = r.TH2F("weightedPDF_vol1_m%s_couplings%s"%(self.pp.MN, self.couplingString),
+            "weightedPDF_vol1_m%s_couplings%s"%(self.pp.MN, self.couplingString),
             self.binsp,self.pMin-0.5*self.pStep,self.pMax-0.5*self.pStep,
             self.binstheta,self.tmin-0.5*self.thetaStep,self.tmax+0.5*self.thetaStep)
-        self.weightedProdHistVol2 = r.TH2F("weightedPDF_vol2_m%s_couplings%s"%(pp.MN, self.couplingString),
-            "weightedPDF_vol2_m%s_couplings%s"%(pp.MN, self.couplingString),
+        self.weightedProdHistVol2 = r.TH2F("weightedPDF_vol2_m%s_couplings%s"%(self.pp.MN, self.couplingString),
+            "weightedPDF_vol2_m%s_couplings%s"%(self.pp.MN, self.couplingString),
             self.binsp,self.pMin-0.5*self.pStep,self.pMax-0.5*self.pStep,
             self.binstheta,self.tmin-0.5*self.thetaStep,self.tmax+0.5*self.thetaStep)
         fourMom = r.TLorentzVector()
@@ -73,14 +73,14 @@ class HistoHandler():
                     angle = self.prodHist.GetYaxis().GetBinCenter(th)
                     binWeight = weight*self.pStep*self.thetaStep
                     vec.SetMagThetaPhi(mom, angle, 0.)
-                    fourMom.SetE(pp.energy(mom, pp.MN))
+                    fourMom.SetE(self.pp.energy(mom, self.pp.MN))
                     fourMom.SetVect(vec)
-                    probVtx1 = ep.probVtxInVolume(fourMom, ct, 1)
-                    probVtx2 = ep.probVtxInVolume(fourMom, ct, 2)
+                    probVtx1 = self.ep.probVtxInVolume(fourMom, ct, 1)
+                    probVtx2 = self.ep.probVtxInVolume(fourMom, ct, 2)
                     #px = fourMom.Px()
                     #pz = fourMom.Pz()
-                    accGeo1 = ep.GeometricAcceptance(fourMom, 1)
-                    accGeo2 = ep.GeometricAcceptance(fourMom, 2)
+                    accGeo1 = self.ep.GeometricAcceptance(fourMom, 1)
+                    accGeo2 = self.ep.GeometricAcceptance(fourMom, 2)
                     acc1 = (binWeight * accGeo1 * probVtx1)
                     acc2 = (binWeight * accGeo2 * probVtx2)
                     self.accVol1 += acc1
@@ -89,12 +89,12 @@ class HistoHandler():
                     self.weightedProdHistVol2.Fill(mom,angle,acc2)
         # Save the PDF
         self.outFileName = 'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
-        outfile = r.TFile(self.outFileName,'update')
+        self.weightedPDFoutfile = r.TFile(self.outFileName,'update')
         self.weightedProdHistVol1.Write("",5)
         self.weightedProdHistVol2.Write("",5)
-        outfile.Close()
-        self.prodPDFoutfile.Close()
-        self.charmFile.Close()
+        #self.weightedPDFoutfile.Close()
+        #self.prodPDFoutfile.Close()
+        #self.charmFile.Close()
         return self.accVol1, self.accVol2
 
 

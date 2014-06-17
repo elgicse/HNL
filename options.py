@@ -168,13 +168,15 @@ class physicsParameters():
         return totalWidth
 
 
-
+def expon(x, par):
+    return math.exp( (-1.)*float(par[0])*float(x[0]) )
 
 
 class experimentParams():
     """ The experimental settings (beam, geometry...)
         Requires an instance pp of physicsParameters() """
     def __init__(self, pp, name):
+        self.LTfun = r.TF1("lifetime",expon,0., 160.,2)
         if name == "SHiP" or name == "ship" or name == "SHIP":
             self.protonEnergy = 400.*pp.MeV # GeV/c
             self.protonMomentum = pp.momentum(self.protonEnergy, pp.masses['p'])
@@ -185,6 +187,27 @@ class experimentParams():
             self.v2ThetaMax = self.secondVolume[2]/self.secondVolume[0]
         else:
             print "experimentParams ERROR: please provide the name of the experiment!"
+    def makeVtxInVolume(self, momentum, ct, volume):
+        if volume == 1:
+            vol = self.firstVolume
+        elif volume == 2:
+            vol = self.secondVolume
+        else:
+            print "ERROR: select decay volume 1 or 2"
+            return 0
+        gamma = momentum.Gamma()
+        Direction = momentum.Vect().Unit()
+        costheta = math.fabs(momentum.CosTheta())
+        dxdz = momentum.Px()/momentum.Pz()
+        dydz = momentum.Py()/momentum.Pz()
+        Origin = r.TVector3( vol[0]*dxdz, vol[0]*dydz, vol[0] )
+        self.LTfun.SetParameter(0, 1./(gamma*ct))
+        maxlength = 40.*costheta
+        DL = self.LTfun.GetRandom(0., maxlength)
+        EndVertex = r.TVector3(Direction[0]*DL, Direction[1]*DL, Direction[2]*DL)
+        EndVertex = Origin + EndVertex
+        return EndVertex
+
     def inAcceptance(self, vtx, mom1, mom2, volume):
         if volume == 1:
             vol = self.firstVolume

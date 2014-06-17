@@ -2,8 +2,61 @@ from __future__ import division
 #import ROOT as r
 import numpy as np
 import gc
-from neutrinoDecayAndBoost import *
+#from neutrinoDecayAndBoost import *
+from saveHNLPdfs import *
 
+def makeDecayInVolume(hh, decayString, volume, statistic=100):
+    pN = r.TLorentzVector()
+    vec = r.TVector3()
+    inVol = 0
+    if volume == 1:
+        sourceHist = hh.weightedProdHistVol1
+    elif volume == 2:
+        sourceHist = hh.weightedProdHistVol2
+    else:
+        print 'makeDecayInVolume ERROR: please select volume 1 or 2'
+        return 0
+    for i in xrange(statistic):
+        momN, thetaN = r.Double(), r.Double()
+        sourceHist.GetRandom2(momN, thetaN)
+        vec.SetMagThetaPhi(momN, thetaN, 0.)
+        pN.SetVect(vec)
+        pN.SetE(hh.pp.energy(momN, hh.pp.MN))
+        hh.ev.decay.readString(decayString)
+        hh.ev.decay.setPMother(pN)
+        pGKid1, pGKid2 = hh.ev.decay.makeDecay()
+        NDecayVtx = hh.ep.makeVtxInVolume(pN, hh.pp.c*hh.pp.NLifetime, volume)
+        inVol += int( ep.inAcceptance(NDecayVtx, pGKid1, pGKid2, volume) )
+    return inVol/statistic, statistic    
+
+
+
+
+
+if __name__ == '__main__':
+    pp = physicsParameters()
+    pp.setNMass(1.)
+    pp.setNCoupling([0.25e-08, 1.e-08, 0.5e-08])
+    ep = experimentParams(pp, 'SHIP')
+    hh = HistoHandler(pp, ep)
+    rawPDF = hh.makeProductionPDF()
+    accv1, accv2 = hh.scaleProductionPDF([0.25e-08, 1.e-08, 0.5e-08])
+    print accv1, accv2
+    fracV1, tot = makeDecayInVolume(hh, 'N -> pi mu', 1)
+    print fracV1, tot
+    hh.weightedPDFoutfile.Close()
+    hh.prodPDFoutfile.Close()
+    hh.charmFile.Close()
+
+
+
+
+
+
+
+
+
+"""
 def HNLAcceptance(u, mass, nMultiply = 10, nCharm = 100, process = 'Ds -> mu N, N -> mu pi', nEvents = 100):
     gc.collect()
     #ev, f, bTree = boostEvents(u, mass, nCharm, process, nEvents)
@@ -36,3 +89,4 @@ def HNLAcceptance(u, mass, nMultiply = 10, nCharm = 100, process = 'Ds -> mu N, 
     return inVol1, inVol2, Norm
 
 
+"""
