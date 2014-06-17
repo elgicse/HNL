@@ -5,6 +5,7 @@ import gc
 from neutrinoDecayAndBoost import *
 
 def HNLAcceptance(u, mass, nMultiply = 10, nCharm = 100, process = 'Ds -> mu N, N -> mu pi', nEvents = 100):
+    gc.collect()
     #ev, f, bTree = boostEvents(u, mass, nCharm, process, nEvents)
     ev = boostEvents(u, mass, nCharm, process, nEvents)
     ev.pp.computeNLifetime()
@@ -28,6 +29,7 @@ def HNLAcceptance(u, mass, nMultiply = 10, nCharm = 100, process = 'Ds -> mu N, 
                 print "Checking acceptance for event %s of %s..."%(int(Norm), nBoostedHNLs*nMultiply)
                 gc.collect()
             NDecayVtx = ev.pp.drawNDecayVtx(pKid2, NProdVtx)
+            #print NProdVtx.Z(), pKid2.Pz(), NDecayVtx.Z(), ev.pp.NLifetime
             inVol1 += int( ep.inAcceptance(NDecayVtx, pGKid1, pGKid2, 1) )
             inVol2 += int( ep.inAcceptance(NDecayVtx, pGKid1, pGKid2, 2) )
     f.Close()

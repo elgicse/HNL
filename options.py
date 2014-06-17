@@ -34,7 +34,8 @@ class physicsParameters():
                     'Ds':1.9685*self.MeV,
                     'D':1.86962*self.MeV,
                     'p':0.938*self.MeV,
-                    'rho':0.775*self.MeV}
+                    'rho':0.775*self.MeV,
+                    'nu':0.*self.MeV}
         self.name2particle = {'pi':'pi','pi1':'pi', 'pi2':'pi','piTag':'pi',
                             'pi0':'pi0',
                             'mu':'mu','muTag':'mu',
@@ -49,7 +50,8 @@ class physicsParameters():
                             'D':'D',
                             'Ds':'Ds',
                             'p':'p',
-                            'rho':'rho'}
+                            'rho':'rho',
+                            'nu':'nu'}
         self.alphaQED = 1./137.
         self.heV = 6.58211928*pow(10.,-16)
         self.hGeV = self.heV * pow(10.,-9)
@@ -215,6 +217,44 @@ class experimentParams():
                         return True
         # Otherwise
         return False
+    def probVtxInVolume(self, momentum, ct, volume):
+        if volume == 1:
+            vol = self.firstVolume
+        elif volume == 2:
+            vol = self.secondVolume
+        else:
+            print "ERROR: select decay volume 1 or 2"
+            return 0
+        gamma = momentum.Gamma()
+        costheta = np.fabs(momentum.CosTheta())
+        tantheta = np.tan(momentum.Theta())
+        start = vol[0]
+        end = vol[1]
+        rad = vol[2]
+        stop = min(rad/tantheta, end)
+        if stop < start:
+            return 0.
+        esp1 = (-1.) * (start/costheta) / (gamma*ct)
+        esp2 = (-1.) * (stop/costheta) / (gamma*ct)
+        np.seterr(all='raise')
+        try:
+            result = np.nan_to_num(np.fabs( np.exp(esp1) - np.exp(esp2) ))
+        except (ValueError, FloatingPointError):#, RuntimeWarning):
+            result = 0.
+        return result
+    def GeometricAcceptance(self, momentum, volume):
+        if volume == 1:
+            vol = self.firstVolume
+        elif volume == 2:
+            vol = self.secondVolume
+        else:
+            print "ERROR: select decay volume 1 or 2"
+            return 0
+        #if (math.fabs((px/pz)*vol[1])<vol[2]) and (pz>0):
+        #    return True
+        if momentum.Theta() < vol[2]/vol[0] and momentum.Pz() > 0.:
+            return True
+        return False
 
         
 
@@ -276,7 +316,7 @@ class myNEvent():
         self.production.readString(self.prodEvtName)
         self.decay = decay2Body(self.pp)
         self.decay.readString(self.NdecayName)
-        self.rootFileName = "out/NTuples/%s_U%s_m%s.root"%(self.evName,'_'.join([str(ui) for ui in self.pp.U]),self.pp.MN)
+        self.rootFileName = "out/NTuples/%s_U%s_m%s.root"%(self.evName,'_'.join([str(ui) for ui in self.pp.U2]),self.pp.MN)
 
 
 
@@ -295,6 +335,14 @@ class CKMmatrix():
         self.Vtd = 8.4e-03
         self.Vts = 4.3e-02
         self.Vtb = 0.89
+
+
+
+
+
+
+
+
 
 
 
