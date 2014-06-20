@@ -3,14 +3,20 @@ from options import *
 
 class HistoHandler():
     """ Manage PDFs for sterile neutrino production and decay """
-    def __init__(self, pp, ep, process = 'Ds -> mu N, N -> mu pi', binsp = 90, binstheta = 80):
+    #def __init__(self, pp, ep, model, process = 'Ds -> mu N,N -> nu nu nu', binsp = 90, binstheta = 80):
+    def __init__(self, pp, ep, model, binsp = 90, binstheta = 80):
         # Setup input
         self.pp = pp
         self.ep = ep
         self.charmFile = r.TFile(self.pp.charmSourceFile, 'read')
         self.charmTree = self.charmFile.Get(self.pp.charmTreeName)
         # Setup physics
-        self.ev = myNEvent(self.pp, process)
+        self.model = model
+        self.ev = myNEvent(self.pp)#, process)
+        if self.model == 3:
+            self.ev.production.readString('Ds -> nu tau')
+        else:
+            self.ev.production.readString('Ds -> mu N')
         self.binstheta = binstheta
         self.binsp = binsp
     def makeProductionPDF(self):
@@ -32,10 +38,20 @@ class HistoHandler():
         # Fill mass histogram
         for charm in self.charmTree:
             pCharm = r.TLorentzVector(charm.CharmPx, charm.CharmPy, charm.CharmPz, charm.CharmE)
+            if self.model == 3:
+                self.ev.production.readString('Ds -> nu tau')
+            else:
+                self.ev.production.readString('Ds -> mu N')
             self.ev.production.setPMother(pCharm)
             pKid1, pKid2 = self.ev.production.makeDecay()
+            if self.model == 3:
+                pTau = r.TLorentzVector(pKid2)
+                self.ev.production.readString('tau -> mu N nu')
+                self.ev.production.setPMother(pTau)
+                pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
             self.prodHist.Fill(pKid2.P(), pKid2.Theta())
         # Make it a PDF
+        #print self.pp.MN, self.pp.U2
         histInt = self.prodHist.Integral("width")
         self.prodHist.Scale(1./histInt)
         self.prodPDFfilename = 'out/NTuples/prodPDF_m%s.root'%(self.pp.MN)
@@ -90,8 +106,11 @@ class HistoHandler():
         # Save the PDF
         self.outFileName = 'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
         self.weightedPDFoutfile = r.TFile(self.outFileName,'update')
-        self.weightedProdHistVol1.Write("",5)
-        self.weightedProdHistVol2.Write("",5)
+        if self.accVol1 > 1.e-20 and self.accVol2 > 1.e-20:
+            self.weightedProdHistVol1.Write("",5)
+            self.weightedProdHistVol2.Write("",5)
+        else:
+            self.accVol1, self.accVol2 = 0., 0.
         #self.weightedPDFoutfile.Close()
         #self.prodPDFoutfile.Close()
         #self.charmFile.Close()

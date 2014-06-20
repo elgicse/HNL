@@ -21,7 +21,27 @@ class physicsParameters():
         self.charmSourceFile = 'CharmFixTarget.root'
         self.charmTreeName = 'newTree'
         self.MeV = 1. #everything in GeV for now
-        self.decays = ['Ds -> mu N, N -> mu pi']
+        self.modelsSq = [(52.,1.,1.), (1.,16.,3.8), (0.061,1.,4.3)]
+        models = [tuple([math.sqrt(i) for i in model]) for model in self.modelsSq]
+        self.models = [tuple([c/models[l][l] for c in models[l]]) for l in [0,1,2]]
+        self.processes = ['Ds -> mu N,N -> pi mu', 'Ds -> mu N,N -> nu nu nu']
+        self.decays = ['N -> nu nu nu',
+                        'N -> e e nu',
+                        'N -> e mu nu',
+                        'N -> mu mu nu',
+                        'N -> pi0 nu',
+                        'N -> pi e',
+                        'N -> pi mu',
+                        'N -> rho nu',
+                        'N -> rho e',
+                        'N -> rho mu',
+                        'rho -> pi pi',
+                        'rho -> pi pi0',
+                        'pi0 -> gamma gamma',
+                        'Ds -> mu N',
+                        'tau -> mu N nu',
+                        'tau -> e N nu',
+                        'Ds -> nu tau']
         self.masses = {'mu':0.10565*self.MeV,
                     'e':0.000511*self.MeV,
                     'tau':1.7768*self.MeV,
@@ -35,7 +55,8 @@ class physicsParameters():
                     'D':1.86962*self.MeV,
                     'p':0.938*self.MeV,
                     'rho':0.775*self.MeV,
-                    'nu':0.*self.MeV}
+                    'nu':0.*self.MeV,
+                    'gamma':0.*self.MeV}
         self.name2particle = {'pi':'pi','pi1':'pi', 'pi2':'pi','piTag':'pi',
                             'pi0':'pi0',
                             'mu':'mu','muTag':'mu',
@@ -51,7 +72,8 @@ class physicsParameters():
                             'Ds':'Ds',
                             'p':'p',
                             'rho':'rho',
-                            'nu':'nu'}
+                            'nu':'nu',
+                            'gamma':'gamma'}
         self.alphaQED = 1./137.
         self.heV = 6.58211928*pow(10.,-16)
         self.hGeV = self.heV * pow(10.,-9)
@@ -68,6 +90,7 @@ class physicsParameters():
         self.CKMelemSq = {'pi':self.CKM.Vud**2.,
                         'rho':self.CKM.Vud**2.,
                         'K':self.CKM.Vus**2.,}
+        self.Xcc = 0.45e-03
         #self.lifetimeFun = interpNLifetime('NLifetime.dat')
     def setNCoupling(self, couplings):
         self.U2 = couplings
@@ -166,6 +189,34 @@ class physicsParameters():
                     + sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
                     + sum([self.Width_l1_l2_nu(a,b,g) for a in [1,2,3] for b in [1,2,3] for g in [1,2,3]]) )
         return totalWidth
+    def findBranchingRatio(self, decayString):
+        br = 0.
+        totalWidth = self.NDecayWidth()
+        if decayString == 'N -> pi e':
+            br = self.Width_H_l('pi',1) / totalWidth
+        elif decayString == 'N -> pi0 nu':
+            br = sum([self.Width_H0_nu('pi0',l) for l in [1,2,3]]) / totalWidth
+        elif decayString == 'N -> pi mu':
+            br = self.Width_H_l('pi',2) / totalWidth
+        elif decayString == 'N -> rho nu':
+            br = sum([self.Width_H0_nu('rho',l) for l in [1,2,3]]) / totalWidth
+        elif decayString == 'N -> rho e':
+            br = self.Width_H_l('rho',1) / totalWidth
+        elif decayString == 'N -> rho mu':
+            br = self.Width_H_l('rho',2) / totalWidth
+        elif decayString == 'N -> e e nu':
+            br = sum([self.Width_l1_l2_nu(1,1,l) for l in [1,2,3]]) / totalWidth
+        elif decayString == 'N -> mu mu nu':
+            br = sum([self.Width_l1_l2_nu(2,2,l) for l in [1,2,3]]) / totalWidth
+        elif decayString == 'N -> e mu nu':
+            br = (sum([self.Width_l1_l2_nu(1,2,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(2,1,l) for l in [1,2,3]])) / totalWidth
+        elif decayString == 'N -> nu nu nu':
+            br = self.Width_3nu() / totalWidth
+        else:
+            print 'findBranchingRatio ERROR: unknown decay %s'%decayString
+            sys.exit(-1)
+        return br
+
 
 
 def expon(x, par):
@@ -208,7 +259,9 @@ class experimentParams():
         EndVertex = Origin + EndVertex
         return EndVertex
 
-    def inAcceptance(self, vtx, mom1, mom2, volume):
+    def inAcceptance(self, vtx, particleList, volume):
+        if not particleList:
+            return False
         if volume == 1:
             vol = self.firstVolume
             tMax = self.v1ThetaMax
@@ -217,27 +270,31 @@ class experimentParams():
             tMax = self.v2ThetaMax
         else:
             print "experimentParams.inAcceptance ERROR: please select volume 1 or 2!"
-        #print vtx.Z()
+        detectable = []
         if (vtx.Z() > vol[0]) and (vtx.Z() < vol[1]): # longitudinal vtx acc
             if (vtx.X()**2. + vtx.Y()**2.) < vol[2]: # transverse vtx acc
-                # Check if child 1 is detectable
-                tx1 = mom1.Px() / mom1.Pz()
-                ty1 = mom1.Py() / mom1.Pz()
-                endPos1 = r.TVector3()
-                endPos1.SetZ(vol[1])
-                endPos1.SetX( vtx.X() + tx1*(endPos1.Z() - vtx.Z()) )
-                endPos1.SetY( vtx.Y() + ty1*(endPos1.Z() - vtx.Z()) )
-                #print "endPos1 ", endPos1.X(), endPos1.Y(), endPos1.Z()
-                if (endPos1.X()**2. + endPos1.Y()**2.) < vol[2]:
-                    # Check if child 2 is detectable:
-                    tx2 = mom2.Px() / mom2.Pz()
-                    ty2 = mom2.Py() / mom2.Pz()
-                    endPos2 = r.TVector3()
-                    endPos2.SetZ(vol[1])
-                    endPos2.SetX( vtx.X() + tx2*(endPos2.Z() - vtx.Z()) )
-                    endPos2.SetY( vtx.Y() + ty2*(endPos2.Z() - vtx.Z()) )
-                    if (endPos2.X()**2. + endPos2.Y()**2.) < vol[2]:
-                        return True
+                for particle in particleList:
+                    tx = particle.Px() / particle.Pz()
+                    ty = particle.Py() / particle.Pz()
+                    endPos1 = r.TVector3()
+                    endPos1.SetZ(vol[1])
+                    endPos1.SetX( vtx.X() + tx*(endPos1.Z() - vtx.Z()) )
+                    endPos1.SetY( vtx.Y() + ty*(endPos1.Z() - vtx.Z()) )
+                    #print "mass: ", math.sqrt(math.fabs(particle.E()**2. - particle.P()**2.)), " endPos1 ", endPos1.X(), endPos1.Y(), endPos1.Z(), ((endPos1.X()**2. + endPos1.Y()**2.) < vol[2]**2.)
+                    if (endPos1.X()**2. + endPos1.Y()**2.) < vol[2]**2.:
+                        detectable.append(True)
+                    else:
+                        detectable.append(False)
+                return bool(np.product(detectable))
+                    ## Check if child 2 is detectable:
+                    #tx2 = mom2.Px() / mom2.Pz()
+                    #ty2 = mom2.Py() / mom2.Pz()
+                    #endPos2 = r.TVector3()
+                    #endPos2.SetZ(vol[1])
+                    #endPos2.SetX( vtx.X() + tx2*(endPos2.Z() - vtx.Z()) )
+                    #endPos2.SetY( vtx.Y() + ty2*(endPos2.Z() - vtx.Z()) )
+                    #if (endPos2.X()**2. + endPos2.Y()**2.) < vol[2]:
+                    #    return True
         # Otherwise
         return False
     def probVtxInVolume(self, momentum, ct, volume):
@@ -281,7 +338,7 @@ class experimentParams():
 
         
 
-class decay2Body():
+class decayNBody():
     """ General 2-bodies decay representation.
         Requires an instance pp of physicsParameters(). """
     def __init__(self, pp):
@@ -292,15 +349,26 @@ class decay2Body():
         self.particles = [None]
         self.lifetime = None
         self.gen = r.TGenPhaseSpace()
-        self.nbody = 2
     def readString(self, decayName):
+        if decayName not in self.pp.decays:# + [process.split(',')[0] for process in self.pp.processes]:
+            print 'decayNBody::readString ERROR: decay %s not found in database!'%decayName
+            sys.exit(-1)
         self.name = decayName
         self.particles = [self.pp.name2particle[p] for p in self.name.replace('->',' ').split()]
         self.mother = self.particles[0]
-        self.pMother = r.TLorentzVector(0., 0., 0., self.pp.masses[self.mother])
+        self.motherMass = self.pp.masses[self.mother]
+        self.pMother = r.TLorentzVector(0., 0., 0., self.motherMass)
         self.kid1 = self.particles[1]
         self.kid2 = self.particles[2]
         self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2]])
+        self.nbody = 2
+        if self.name in (self.pp.decays[:4]+['tau -> mu N nu', 'tau -> e N nu']):
+            self.nbody = 3
+            self.kid3 = self.particles[3]
+            self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2], self.pp.masses[self.kid3]])
+        if sum(self.childrenMasses) > self.motherMass:
+            print 'decayNBody::readString ERROR: children too heavy! %s'%decayName
+            sys.exit(-1)
     def setPMother(self, pMother):
         self.pMother = pMother
     def setLifetime(self, lifetime):
@@ -308,11 +376,15 @@ class decay2Body():
     def makeDecay(self):
         """ if no setPMother method is called, this method makes a RF decay """
         if not self.childrenMasses:
-            print "decay2Body ERROR: I have no particles!"
+            print "decayNBody ERROR: I have no particles!"
             sys.exit(-1)
         self.gen.SetDecay(self.pMother, self.nbody, self.childrenMasses)
         self.gen.Generate()
         self.pKid1, self.pKid2 = self.gen.GetDecay(0), self.gen.GetDecay(1)
+        #if self.name in self.pp.decays[:4]:
+        if self.nbody == 3:
+            self.pKid3 = self.gen.GetDecay(2)
+            return self.pKid1, self.pKid2, self.pKid3
         return self.pKid1, self.pKid2
     def boostChildren(self, pBoost):
         """ requires a TLorentzVector::BoostVector pBoost """
@@ -322,7 +394,7 @@ class decay2Body():
 class myNEvent():
     """ Sterile neutrino production and decay.
         Requires an instance pp of physicsParameters(). """
-    def __init__(self, pp, evName):
+    def __init__(self, pp):#, evName):
         if not 'N' in pp.masses:
             print "physicsParameters ERROR: sterile neutrino mass undefined!"
             sys.exit(-1)
@@ -330,16 +402,16 @@ class myNEvent():
             print "physicsParameters ERROR: sterile neutrino coupling undefined!"
             sys.exit(-1)
         self.pp = pp #physics
-        self.evName = evName
-        if not evName in self.pp.decays:
-            print "myNEvent ERROR: decay chain not found in db!"
-            sys.exit(-1)
-        self.prodEvtName, self.NdecayName = self.evName.split(',')
-        self.production = decay2Body(self.pp)
-        self.production.readString(self.prodEvtName)
-        self.decay = decay2Body(self.pp)
-        self.decay.readString(self.NdecayName)
-        self.rootFileName = "out/NTuples/%s_U%s_m%s.root"%(self.evName,'_'.join([str(ui) for ui in self.pp.U2]),self.pp.MN)
+        #self.evName = evName
+        #if not evName in self.pp.processes:
+        #    print "myNEvent ERROR: decay chain not found in db!"
+        #    sys.exit(-1)
+        #self.prodEvtName, self.NdecayName = self.evName.split(',')
+        self.production = decayNBody(self.pp)
+        #self.production.readString(self.prodEvtName)
+        self.decay = decayNBody(self.pp)
+        #self.decay.readString(self.NdecayName)
+        #self.rootFileName = "out/NTuples/%s_U%s_m%s.root"%(self.evName,'_'.join([str(ui) for ui in self.pp.U2]),self.pp.MN)
 
 
 
