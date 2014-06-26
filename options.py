@@ -24,6 +24,9 @@ class physicsParameters():
         self.modelsSq = [(52.,1.,1.), (1.,16.,3.8), (0.061,1.,4.3)]
         models = [tuple([math.sqrt(i) for i in model]) for model in self.modelsSq]
         self.models = [tuple([c/models[l][l] for c in models[l]]) for l in [0,1,2]]
+        self.factors = [1. + 1./26.,
+                        1. + 1./16. + 3.8/16.,
+                        1. + 0.061/4.3 + 1./4.3]
         self.processes = ['Ds -> mu N,N -> pi mu', 'Ds -> mu N,N -> nu nu nu']
         self.decays = ['N -> nu nu nu',
                         'N -> e e nu',
@@ -56,7 +59,15 @@ class physicsParameters():
                     'p':0.938*self.MeV,
                     'rho':0.775*self.MeV,
                     'nu':0.*self.MeV,
-                    'gamma':0.*self.MeV}
+                    'gamma':0.*self.MeV,
+                    'up':2.3e-3,
+                    'down':4.8e-3,
+                    'strange':95.e-3,
+                    'charm':1.28,
+                    'bottom':4.18,
+                    'top':173.,
+                    'W':80.39,
+                    'Z':91.19}
         self.name2particle = {'pi':'pi','pi1':'pi', 'pi2':'pi','piTag':'pi',
                             'pi0':'pi0',
                             'mu':'mu','muTag':'mu',
@@ -73,7 +84,15 @@ class physicsParameters():
                             'p':'p',
                             'rho':'rho',
                             'nu':'nu',
-                            'gamma':'gamma'}
+                            'gamma':'gamma',
+                            'up':'up',
+                            'down':'down',
+                            'strange':'strange',
+                            'charm':'charm',
+                            'top':'top',
+                            'bottom':'bottom',
+                            'W':'W',
+                            'Z':'Z', 'Z0':'Z'}
         self.alphaQED = 1./137.
         self.heV = 6.58211928*pow(10.,-16)
         self.hGeV = self.heV * pow(10.,-9)
@@ -89,12 +108,29 @@ class physicsParameters():
         self.CKM = CKMmatrix()
         self.CKMelemSq = {'pi':self.CKM.Vud**2.,
                         'rho':self.CKM.Vud**2.,
-                        'K':self.CKM.Vus**2.,}
+                        'K':self.CKM.Vus**2.,
+                        # Quarks:
+                        # 0=u, 1=d, 2=s, 3=c, 4=b, 5=t
+                        (0,0):1., (1,1):1., (2,2):1., (3,3):1., (4,4):1., (5,5):1., #flavour with same flavour
+                        (0,3):0., (3,0):0., (0,5):0., (5,0):0., (3,5):0., (5,3):0., #up-type with up-type
+                        (1,2):0., (2,1):0., (1,4):0., (4,1):0., (2,4):0., (4,2):0., #down-type with down-type
+                        (0,1):self.CKM.Vud**2., (1,0):self.CKM.Vud**2.,
+                        (0,2):self.CKM.Vus**2., (2,0):self.CKM.Vus**2.,
+                        (0,4):self.CKM.Vub**2., (4,0):self.CKM.Vub**2.,
+                        (3,1):self.CKM.Vcd**2., (1,3):self.CKM.Vcd**2.,
+                        (3,2):self.CKM.Vcs**2., (2,3):self.CKM.Vcs**2.,
+                        (3,4):self.CKM.Vcb**2., (4,3):self.CKM.Vcb**2.,
+                        (5,1):self.CKM.Vtd**2., (1,5):self.CKM.Vtd**2.,
+                        (5,2):self.CKM.Vts**2., (2,5):self.CKM.Vts**2.,
+                        (5,4):self.CKM.Vtb**2., (4,5):self.CKM.Vtb**2.}
         self.Xcc = 0.45e-03
         #self.lifetimeFun = interpNLifetime('NLifetime.dat')
     def setNCoupling(self, couplings):
         self.U2 = couplings
         self.U = [math.sqrt(ui) for ui in self.U2]
+    def computeU2tot(self):
+        self.U2tot = sum(self.U2)
+        return self.U2tot
     def setNMass(self, mass):
         self.MN = mass
         self.NM = mass
@@ -138,6 +174,7 @@ class physicsParameters():
             par = par*2./(self.masses[self.name2particle[H]]**2.)
             par = par*(1 + 2.*((self.masses[self.name2particle[H]]**2.)/(self.MN**2.)))
         width = width*par
+        width = 2.*width # Majorana case (charge conjugate channels)
         return width
     def Width_H_l(self, H, alpha):
         l = [None,'e','mu','tau']
@@ -158,15 +195,33 @@ class physicsParameters():
         rad = math.sqrt( ( 1-((self.masses[self.name2particle[H]]-self.masses[self.name2particle[l[alpha]]])**2.)/(self.MN**2.) )
                 * ( ( 1-((self.masses[self.name2particle[H]]+self.masses[self.name2particle[l[alpha]]])**2.)/(self.MN**2.) ) ) )
         width = width*rad
+        width = 2.*width # Majorana case (charge conjugate channels)
         return width
     def Width_3nu(self):
         width = (self.GF**2.)*(self.MN**5.)*sum(self.U2)/(192.*(math.pi**3.))
+        width = 2.*width # Majorana case (charge conjugate channels)
         return width
     def Width_l1_l2_nu(self, alpha, beta, gamma): # alpha, beta for the two leptons, gamma for the neutrino
-        l = [None,'e','mu','tau']
+        l = [None,'e','mu','tau','up','down','strange','charm','bottom','top']
         if self.MN < (self.masses[self.name2particle[l[alpha]]] + self.masses[self.name2particle[l[beta]]]):
             return 0.
-        width = (self.GF**2.)*(self.MN**5.)*self.U2[alpha-1]/(192.*(math.pi**3.))
+
+        if (alpha > 3) and (beta == alpha): # N -> nu qq or N -> nu ll (mainly Z0)
+            width = (self.GF**2.)*(self.MN**5.)*self.U2[gamma-1]/(192.*(math.pi**3.))
+
+        elif ((alpha in [4, 7, 9]) and (beta in [5, 6, 8])) or ((alpha in [5, 6, 8]) and (beta in [4, 7, 9])): # N -> l W, W -> u dbar, index gamma stands for massive lepton
+            if gamma == 3: # tau too massive for this parametrisation
+                return 0.
+            if self.MN < (self.masses[self.name2particle[l[alpha]]] + self.masses[self.name2particle[l[beta]]] + self.masses[self.name2particle[l[gamma]]]):
+                return 0.
+            width = (self.GF**2.)*(self.MN**5.)*self.U2[gamma-1]/(192.*(math.pi**3.))*self.CKMelemSq[(alpha-4, beta-4)]
+
+        elif (alpha <= 3) and (beta <= 3):
+            width = (self.GF**2.)*(self.MN**5.)*self.U2[alpha-1]/(192.*(math.pi**3.))
+
+        else:
+            return 0.
+
         if alpha != beta:
             xl = max([self.masses[self.name2particle[l[alpha]]] , self.masses[self.name2particle[l[beta]]]])/self.MN
             width = width*(1. - 8.*xl**2. + 8.*xl**6. - (12.*xl**4.)*math.log(xl**2.))
@@ -183,22 +238,46 @@ class physicsParameters():
             d = (alpha == gamma)
             width = width*( (c1*(1-d)+c3*d)*( (1.-14.*xl**2. -2.*xl**4. -12.*xl**6.)*math.sqrt(1-4.*xl**2) +12.*xl**4. *(-1.+xl**4.)*lo )
                             + 4.*(c2*(1-d)+c4*d)*( xl**2. *(2.+10.*xl**2. -12.*xl**4.) * math.sqrt(1.-4.*xl**2) + 6.*xl**4. *(1.-2.*xl**2+2.*xl**4)*lo ) )
+        #if alpha>3 and beta>3: # N -> q q nu
+        #    width = width*self.CKMelemSq[(alpha-4, beta-4)]
+        width = 2.*width # Majorana case (charge conjugate channels)
         return width
+
     def NDecayWidth(self):
-        totalWidth = ( self.Width_3nu()
-                    + sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
+        if self.MN < 1.:
+            totalWidth = ( self.Width_3nu()
+                    #+ sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
                     + sum([self.Width_l1_l2_nu(a,b,g) for a in [1,2,3] for b in [1,2,3] for g in [1,2,3]]) )
+        elif self.MN > 2.:
+            totalWidth = ( self.Width_3nu() + sum([self.Width_l1_l2_nu(a,b,g) for a in range(1,10) for b in range(1,10) for g in [1,2,3]]) )
+        else:
+            m1, m2 = 1., 2.
+            tempMass = self.MN
+            self.MN = m1
+            w1 = ( self.Width_3nu()
+                    #+ sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
+                    + sum([self.Width_l1_l2_nu(a,b,g) for a in [1,2,3] for b in [1,2,3] for g in [1,2,3]]) )
+            self.MN = m2
+            w2 = ( self.Width_3nu() + sum([self.Width_l1_l2_nu(a,b,g) for a in range(1,10) for b in range(1,10) for g in [1,2,3]]) )
+            self.MN = tempMass
+            totalWidth = w1 + (self.MN - m1)*(w2 - w1)/(m2 - m1)
+        #if self.MN < 10.:
+        #    totalWidth = ( self.Width_3nu()
+        #            + sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
+        #            + sum([self.Width_l1_l2_nu(a,b,g) for a in [1,2,3] for b in [1,2,3] for g in [1,2,3]]) )
+        #else:
+        #    totalWidth = ( self.Width_3nu() + sum([self.Width_l1_l2_nu(a,b,g) for a in range(1,10) for b in range(1,10) for g in [1,2,3]]) )
         return totalWidth
     def findBranchingRatio(self, decayString):
         br = 0.
         totalWidth = self.NDecayWidth()
         if decayString == 'N -> pi e':
             br = self.Width_H_l('pi',1) / totalWidth
-        elif decayString == 'N -> pi0 nu':
+        elif decayString == 'N -> pi0 nu' or decayString == 'N -> pi nu':
             br = sum([self.Width_H0_nu('pi0',l) for l in [1,2,3]]) / totalWidth
         elif decayString == 'N -> pi mu':
             br = self.Width_H_l('pi',2) / totalWidth
-        elif decayString == 'N -> rho nu':
+        elif decayString == 'N -> rho nu' or decayString == 'N -> rho0 nu':
             br = sum([self.Width_H0_nu('rho',l) for l in [1,2,3]]) / totalWidth
         elif decayString == 'N -> rho e':
             br = self.Width_H_l('rho',1) / totalWidth
@@ -210,12 +289,69 @@ class physicsParameters():
             br = sum([self.Width_l1_l2_nu(2,2,l) for l in [1,2,3]]) / totalWidth
         elif decayString == 'N -> e mu nu':
             br = (sum([self.Width_l1_l2_nu(1,2,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(2,1,l) for l in [1,2,3]])) / totalWidth
-        elif decayString == 'N -> nu nu nu':
+        elif decayString == 'N -> nu nu nu' or decayString == 'N -> 3nu':
             br = self.Width_3nu() / totalWidth
+        elif decayString == 'N -> hadrons':
+            if self.MN < 1.:
+                br = sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])/totalWidth
+            elif self.MN > 2.:
+                br = sum([self.Width_l1_l2_nu(a,b,g) for a in range(4,10) for b in range(4,10) for g in [1,2,3]])/totalWidth
+            else:
+                m1, m2 = 1., 2.
+                tempMass = self.MN
+                self.MN = m1
+                br1 = sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])/totalWidth
+                self.MN = m2
+                br2 = sum([self.Width_l1_l2_nu(a,b,g) for a in range(4,10) for b in range(4,10) for g in [1,2,3]])/totalWidth
+                self.MN = tempMass
+                br = br1 + (self.MN - m1)*(br2 - br1)/(m2 - m1)
+        elif decayString == 'N -> charged hadrons':
+            if self.MN < 1.:
+                br = sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) for l in [1,2,3]])/totalWidth
+            elif self.MN > 2.:
+                br = sum([self.Width_l1_l2_nu(a,b,g) for a in range(4,10) for b in range(4,10) for g in [1,2,3]])/totalWidth
+            else:
+                m1, m2 = 1., 2.
+                tempMass = self.MN
+                self.MN = m1
+                br1 = sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) for l in [1,2,3]])/totalWidth
+                self.MN = m2
+                br2 = sum([self.Width_l1_l2_nu(a,b,g) for a in range(4,10) for b in range(4,10) for g in [1,2,3]])/totalWidth
+                self.MN = tempMass
+                br = br1 + (self.MN - m1)*(br2 - br1)/(m2 - m1)
+            #if self.MN < 10.:
+            #    br = sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])/totalWidth
+            #else:
+            #    br = sum([self.Width_l1_l2_nu(a,b,g) for a in range(4,10) for b in range(4,10) for g in [1,2,3]])/totalWidth
         else:
             print 'findBranchingRatio ERROR: unknown decay %s'%decayString
             sys.exit(-1)
         return br
+    def HNLAllowedDecays(self):
+        m = self.MN
+        allowedDecays = {'N -> nu nu nu':'yes'}
+        if m > 2.*self.masses[self.name2particle['e']]:
+            allowedDecays.update({'N -> e e nu':'yes'})
+            if m > self.masses[self.name2particle['e']] + self.masses[self.name2particle['mu']]:
+                allowedDecays.update({'N -> e mu nu':'yes'})
+            if m > self.masses[self.name2particle['pi0']]:
+                allowedDecays.update({'N -> pi0 nu':'yes'})
+            if m > self.masses[self.name2particle['pi']] + self.masses[self.name2particle['e']]:
+                allowedDecays.update({'N -> pi e':'yes'})
+                if m > 2.*self.masses[self.name2particle['mu']]:
+                    allowedDecays.update({'N -> mu mu nu':'yes'})
+                    if m > self.masses[self.name2particle['pi']] + self.masses[self.name2particle['mu']]:
+                        allowedDecays.update({'N -> pi mu':'yes'})
+                        if m > self.masses[self.name2particle['rho']]:
+                            allowedDecays.update({'N -> rho nu':'yes'})
+                            if m > self.masses[self.name2particle['rho']] + self.masses[self.name2particle['e']]:
+                                allowedDecays.update({'N -> rho e':'yes'})
+                                if m > self.masses[self.name2particle['rho']] + self.masses[self.name2particle['mu']]:
+                                    allowedDecays.update({'N -> rho mu':'yes'})
+        for decay in self.decays:
+            if decay not in allowedDecays and decay.startswith('N'):
+                allowedDecays.update({decay:'no'})
+        return allowedDecays
 
 
 
@@ -236,6 +372,14 @@ class experimentParams():
             self.secondVolume = [110., 150., 2.5] # start, end, radius (m)
             self.v1ThetaMax = self.firstVolume[2]/self.firstVolume[0]
             self.v2ThetaMax = self.secondVolume[2]/self.secondVolume[0]
+        elif name == "TLEP" or name == "tlep" or name == "Tlep":
+            self.nZ = 1.e12
+            self.efficiency = 1.
+            self.minSVdistance = 1.e-3 # 1 mm (maybe increase to 5 mm)
+            self.Rmin = 1.e-3
+            self.Rmax = 1. # 1 m (maybe increase?)
+            #self.NGamma = pp.masses[pp.name2particle['Z']]/2.
+            self.BRZnunu = 0.08
         else:
             print "experimentParams ERROR: please provide the name of the experiment!"
     def makeVtxInVolume(self, momentum, ct, volume):
@@ -258,7 +402,19 @@ class experimentParams():
         EndVertex = r.TVector3(Direction[0]*DL, Direction[1]*DL, Direction[2]*DL)
         EndVertex = Origin + EndVertex
         return EndVertex
-
+    def TLEPacceptance(self,pp):
+        lt = pp.computeNLifetime()
+        mz = pp.masses[pp.name2particle['Z']]
+        gamma = (mz/(2.*pp.MN)) + (pp.MN/(2.*mz))
+        cgammatau = lt*gamma*pp.c
+        esp1 = (-1.)*self.Rmin/cgammatau
+        esp2 = (-1.)*self.Rmax/cgammatau
+        np.seterr(all='raise')
+        try:
+            result = np.nan_to_num(np.fabs( np.exp(esp1) - np.exp(esp2) ))
+        except (ValueError, FloatingPointError):#, RuntimeWarning):
+            result = 0.
+        return result
     def inAcceptance(self, vtx, particleList, volume):
         if not particleList:
             return False

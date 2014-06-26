@@ -144,7 +144,7 @@ if __name__ == '__main__':
     verbose = True
 
     existingData3 = loadDataFile(3)
-    data3 = makeSensitivityBelt(existingData3, 3, 51, 50, verbose)
+    data3 = makeSensitivityBelt(existingData3, 3, 102, 100, verbose)
     existingData3 = convertToLog(existingData3)
     data3.extend(existingData3)
     gc.collect()
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     gr3.SetFillStyle(3002)
     gr3.SetLineColor(r.kBlue)
     gr3.SetMarkerColor(r.kBlue)
-    gr3.SetTitle('HNL model III')
+    gr3.SetTitle('HNL model III - ignore BAUs')
 
     ascisse = [x[0] for x in bot3]
     ordinate = [lineForTwoPoints((start[2],yStart[2][1]),(stop[2],yStop[2][1]),x) for x in ascisse]
@@ -227,4 +227,3 @@ if __name__ == '__main__':
     gr.GetYaxis().SetTitleSize(0.05)
     gr.GetXaxis().SetTitleOffset(0.90)
     gr.GetYaxis().SetTitleOffset(0.90)
-    
