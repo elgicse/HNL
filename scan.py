@@ -142,9 +142,9 @@ def readFile(filename):
 
 if __name__ == '__main__':
     verbose = True
-
-    existingData3 = loadDataFile(3)
-    data3 = makeSensitivityBelt(existingData3, 3, 102, 100, verbose)
+    model = 3
+    existingData3 = loadDataFile(model)
+    data3 = makeSensitivityBelt(existingData3, model, 102, 100, verbose)
     existingData3 = convertToLog(existingData3)
     data3.extend(existingData3)
     gc.collect()
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     num3 = len(bot3)
     gr3 = r.TGraph(num3+1)
     for i in xrange(len(bot3)):
-        gr3.SetPoint(i,10.**bot3[i][0],10.**bot3[i][1])
+        gr3.SetPoint(i,10.**bot3[i][0],pp.factors[model-1]*10.**bot3[i][1])
     gr3.SetPoint(num3,max([10.**x[0] for x in bot3]),max([10.**x[1] for x in bot3]))
     #gr3 = r.TGraph(num3+2)
     #for i in xrange(len(bot3)):
@@ -169,6 +169,9 @@ if __name__ == '__main__':
     gr3.SetLineColor(r.kBlue)
     gr3.SetMarkerColor(r.kBlue)
     gr3.SetTitle('HNL model III - ignore BAUs')
+    graphFile = r.TFile('out/plots/grModel%s'%model, 'recreate')
+    gr3.Write()
+    graphFile.Close()
 
     ascisse = [x[0] for x in bot3]
     ordinate = [lineForTwoPoints((start[2],yStart[2][1]),(stop[2],yStop[2][1]),x) for x in ascisse]
@@ -226,9 +229,4 @@ if __name__ == '__main__':
     gr.GetXaxis().SetTitleSize(0.05)
     gr.GetYaxis().SetTitleSize(0.05)
     gr.GetXaxis().SetTitleOffset(0.90)
-<<<<<<< HEAD
     gr.GetYaxis().SetTitleOffset(0.90)
-=======
-    gr.GetYaxis().SetTitleOffset(0.90)
-    
->>>>>>> 4719f871c27273360441bcc01446243fed641319
