@@ -22,7 +22,7 @@ class physicsParameters():
         self.charmTreeName = 'newTree'
         self.MeV = 1. #everything in GeV for now
         self.modelsSq = [(52.,1.,1.), (1.,16.,3.8), (0.061,1.,4.3)]
-        models = [tuple([math.sqrt(i) for i in model]) for model in self.modelsSq]
+        models = self.modelsSq#[tuple([math.sqrt(i) for i in model]) for model in self.modelsSq]
         self.models = [tuple([c/models[l][l] for c in models[l]]) for l in [0,1,2]]
         self.processes = ['Ds -> mu N,N -> pi mu', 'Ds -> mu N,N -> nu nu nu']
         self.decays = ['N -> nu nu nu',
