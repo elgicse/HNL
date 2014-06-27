@@ -82,31 +82,31 @@ def HNLDecayChain(hh, decayString, pN):
     return kids
 
 
-def HNLAllowedDecays(pp):
-    m = pp.MN
-    allowedDecays = {'N -> nu nu nu':'yes'}
-    if m > 2.*pp.masses[pp.name2particle['e']]:
-        allowedDecays.update({'N -> e e nu':'yes'})
-        if m > pp.masses[pp.name2particle['e']] + pp.masses[pp.name2particle['mu']]:
-            allowedDecays.update({'N -> e mu nu':'yes'})
-        if m > pp.masses[pp.name2particle['pi0']]:
-            allowedDecays.update({'N -> pi0 nu':'yes'})
-        if m > pp.masses[pp.name2particle['pi']] + pp.masses[pp.name2particle['e']]:
-            allowedDecays.update({'N -> pi e':'yes'})
-            if m > 2.*pp.masses[pp.name2particle['mu']]:
-                allowedDecays.update({'N -> mu mu nu':'yes'})
-                if m > pp.masses[pp.name2particle['pi']] + pp.masses[pp.name2particle['mu']]:
-                    allowedDecays.update({'N -> pi mu':'yes'})
-                    if m > pp.masses[pp.name2particle['rho']]:
-                        allowedDecays.update({'N -> rho nu':'yes'})
-                        if m > pp.masses[pp.name2particle['rho']] + pp.masses[pp.name2particle['e']]:
-                            allowedDecays.update({'N -> rho e':'yes'})
-                            if m > pp.masses[pp.name2particle['rho']] + pp.masses[pp.name2particle['mu']]:
-                                allowedDecays.update({'N -> rho mu':'yes'})
-    for decay in pp.decays:
-        if decay not in allowedDecays and decay.startswith('N'):
-            allowedDecays.update({decay:'no'})
-    return allowedDecays
+#def HNLAllowedDecays(pp):
+#    m = pp.MN
+#    allowedDecays = {'N -> nu nu nu':'yes'}
+#    if m > 2.*pp.masses[pp.name2particle['e']]:
+#        allowedDecays.update({'N -> e e nu':'yes'})
+#        if m > pp.masses[pp.name2particle['e']] + pp.masses[pp.name2particle['mu']]:
+#            allowedDecays.update({'N -> e mu nu':'yes'})
+#        if m > pp.masses[pp.name2particle['pi0']]:
+#            allowedDecays.update({'N -> pi0 nu':'yes'})
+#        if m > pp.masses[pp.name2particle['pi']] + pp.masses[pp.name2particle['e']]:
+#            allowedDecays.update({'N -> pi e':'yes'})
+#            if m > 2.*pp.masses[pp.name2particle['mu']]:
+#                allowedDecays.update({'N -> mu mu nu':'yes'})
+#                if m > pp.masses[pp.name2particle['pi']] + pp.masses[pp.name2particle['mu']]:
+#                    allowedDecays.update({'N -> pi mu':'yes'})
+#                    if m > pp.masses[pp.name2particle['rho']]:
+#                        allowedDecays.update({'N -> rho nu':'yes'})
+#                        if m > pp.masses[pp.name2particle['rho']] + pp.masses[pp.name2particle['e']]:
+#                            allowedDecays.update({'N -> rho e':'yes'})
+#                            if m > pp.masses[pp.name2particle['rho']] + pp.masses[pp.name2particle['mu']]:
+#                                allowedDecays.update({'N -> rho mu':'yes'})
+#    for decay in pp.decays:
+#        if decay not in allowedDecays and decay.startswith('N'):
+#            allowedDecays.update({decay:'no'})
+#    return allowedDecays
 
 
 
@@ -129,7 +129,7 @@ def computeNEvents(model, mass, coupling):
     hh = HistoHandler(pp, ep, model+1)
     hh.makeProductionPDF()
     accv1, accv2 = hh.scaleProductionPDF(couplings)
-    decList = HNLAllowedDecays(hh.pp)
+    decList = hh.pp.HNLAllowedDecays()#HNLAllowedDecays(hh.pp)
     weight1 = 0.
     weight2 = 0.
     for dec in decList:

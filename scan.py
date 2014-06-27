@@ -226,5 +226,9 @@ if __name__ == '__main__':
     gr.GetXaxis().SetTitleSize(0.05)
     gr.GetYaxis().SetTitleSize(0.05)
     gr.GetXaxis().SetTitleOffset(0.90)
+<<<<<<< HEAD
+    gr.GetYaxis().SetTitleOffset(0.90)
+=======
     gr.GetYaxis().SetTitleOffset(0.90)
     
+>>>>>>> 4719f871c27273360441bcc01446243fed641319
