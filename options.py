@@ -409,9 +409,10 @@ class experimentParams():
         cgammatau = lt*gamma*pp.c
         esp1 = (-1.)*self.Rmin/cgammatau
         esp2 = (-1.)*self.Rmax/cgammatau
-        np.seterr(all='raise')
+        #np.seterr(all='raise')
         try:
-            result = np.nan_to_num(np.fabs( np.exp(esp1) - np.exp(esp2) ))
+            #result = np.nan_to_num(np.fabs( np.exp(esp1) - np.exp(esp2) ))
+            result = np.nan_to_num(np.exp(esp1) - np.exp(esp2))
         except (ValueError, FloatingPointError):#, RuntimeWarning):
             result = 0.
         return result

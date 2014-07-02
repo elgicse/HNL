@@ -16,6 +16,18 @@ logPosOfKinks = [None, -0.55, -0.4, -0.4, -0.15] + [0., 0., -0.7, -0.4]
 #    yield x
 #    x += jump
 
+def importBBN(model, hierarchy, mmin, mmax):
+    filename = 'Limits/existing/data/u2%s_%s_bbn.csv'%(modelNames[model], hierarchy)
+    mass, u2 = [], []
+    with open(filename,'r') as f:
+        for line in f:
+            line = line.split(', ')
+            if mmin < float(line[0]) < mmax:
+                mass.append(float(line[0]))
+                u2.append(float(line[1]))
+    grbbn = r.TGraph(len(mass), array('f',mass), array('f',u2))
+    return grbbn
+
 def importSeesaw(model, hierarchy, mmin, mmax, npoints=100):
     filename = 'Limits/existing/data/u2%s_%s_seesaw.csv'%(modelNames[model], hierarchy)
     rawMSSSup, rawUSSSup = [], []

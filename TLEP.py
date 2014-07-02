@@ -8,23 +8,27 @@ from BauLimits import *
 cSaver = []
 # Sensitivity scan mass range
 start = [math.log10(0.1)]*3 #GeV
-stop = [math.log10(75.)]*3 #GeV
+stop = [math.log10(85.)]*3 #GeV
 # Sensitivity scan U^2 range
 #yStart = [math.log10(5.e-06)]*3
-yStart = [math.log10(40.)]*3
-yStop = [math.log10(1.e-12)]*3
+yStop = [math.log10(1.e-5)]*3
+yStart = [math.log10(1.e-13)]*3
 
 ################### there is also an upper bound... ##################
+#a = math.log10(0.1) # works for 10^12 Z
 a = math.log10(0.1)
 aa = math.log10(20.)
 e = math.log10(80.)
 upper = "upper"
 lower = "lower"
-sl1 = (-10.+7.)/(math.log10(70.)-math.log10(21.))
-sl2 = (-11.+6.)/(math.log10(60.)-math.log10(0.7))
+#sl1 = (-10.+7.)/(math.log10(70.)-math.log10(21.)) #works for 10^12 Z
+sl1 = (-10.-math.log10(0.9e-5))/(math.log10(50.)-math.log10(7.))
+#sl2 = (-11.+6.)/(math.log10(60.)-math.log10(0.7)) #works for 10^12 Z
+sl2 = (-11.-math.log10(1.2e-7))/(math.log10(20.)-math.log10(1.))
 # ystart (upper, lower)
-newy1 = [-6., math.log10(3.e-8)]
-newy2 = [math.log10(4.e-4), math.log10(4.e-7)]
+#newy1 = [-6., math.log10(3.e-8)] # works for 10^12 Z
+newy1 = [math.log10(3.e-5), math.log10(3.e-9)]
+newy2 = [math.log10(5.e-4), math.log10(8.e-6)]
 def inBeltSegments((x,y)):
     if (a < x < e) and (beltSegment(lower, newy1, aa, sl1, x) < y < beltSegment(upper, newy1, aa, sl1, x)): # sopra
         return True
@@ -36,8 +40,10 @@ def inTopHalf(p1,p2,datum):
         return True
     return False
 def make2Countours(data,m):
-    p1 = (math.log10(5.), -6.)
-    p2 = (math.log10(80.), math.log10(3.e-11))
+    p1 = (math.log10(10.), -6.) #works for 10^12 Z
+    #p1 = (math.log10(4.), -6.)
+    p2 = (math.log10(80.), math.log10(3.e-11)) # works for 10^12 Z
+    #p2 = (math.log10(20.), -9.)
     xAxis = []
     for datum in data:
         xAxis.append(datum[0])
@@ -84,7 +90,7 @@ def BAU(m,pp):
     return 2.e-6*(1/m**2.)*((1.-(m**2./pp.masses[pp.name2particle['W']]**2.))**2.)
 
 def makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nZ, verbose=0):
-    points = [(x,y) for x in np.linspace(start[model-1], stop[model-1], ndivx) for y in np.linspace(yStart[model-1], yStop[model-1], ndivy) if inBeltSegments((x,y))]
+    points = [(x,y) for x in np.linspace(start[model-1], stop[model-1], ndivx) for y in np.linspace(yStart[model-1], yStop[model-1], ndivy)]# if inBeltSegments((x,y))]
     data = []
     pp = physicsParameters()
     ep = experimentParams(pp, 'TLEP')
@@ -105,7 +111,7 @@ def makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nZ, verbo
     #            break
     #    if not found:
     #    # indent next line
-        n = roundToN( computeNEventsTLEP(outFilePath, pp, ep, model, mass, eps),3 )
+        n = roundToN( computeNEventsTLEP(pp, ep, model, mass, eps),3 )
         logmass = roundToN(point[0],3)
         logeps = roundToN(point[1],3)
         datum = ( logmass, logeps, n)
@@ -118,7 +124,7 @@ def makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nZ, verbo
     print 'Execution time: %s s'%(toc-tic)
     return data
 
-def computeNEventsTLEP(outFilePath, pp, ep, model, mass, coupling):
+def computeNEventsTLEP(pp, ep, model, mass, coupling):
     """ Choose model 1, 2 or 3 """
     pp.setNMass(mass)
     if pp.MN > pp.masses[pp.name2particle['Z']]:
@@ -137,7 +143,7 @@ def computeNEventsTLEP(outFilePath, pp, ep, model, mass, coupling):
         if decList[dec] == 'yes' and (dec == 'N -> e e nu' or dec == 'N -> mu mu nu' or dec == 'N -> e mu nu'):
             DetectableFraction += pp.findBranchingRatio(dec)
     acc = ep.TLEPacceptance(pp)
-    #print 'Acceptance: ', acc, pp.computeNLifetime(), ep.Rmin, DetectableFraction
+    #print 'Acceptance: ', acc, '\tLT: ', pp.computeNLifetime(), '\tvTELEP: ', ep.Rmin, ep.Rmax, ep.nZ, '\tBR: ', DetectableFraction
     NEv = ep.BRZnunu * pp.factors[model] * 2 * ep.nZ * pp.U2[model] * acc * DetectableFraction # moltiplicare anche U2 per factor (U2 -> U2tot)???
     #with open(outFilePath,"a") as ofile:
     #    try:
@@ -189,12 +195,16 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     #gr.SetFillStyle(3002)
     gr.SetLineColor(r.kOrange-3)
     gr.SetMarkerColor(r.kOrange-3)
+    #gr.SetLineColor(r.kMagenta)
+    #gr.SetMarkerColor(r.kMagenta)
     gr.SetTitle('HNL model II')
     pp = physicsParameters()
 
     modelUtot=4 #U^2 tot
     mmin, mmax = 0.2, 83.
     h = 'normal'
+    if model == 1:
+        h = 'inverted'
     #grBauLower, grBauUpper, useless1, useless2 = importBAU(model, 'normal', min([10.**el[0] for el in bot]), max([10.**el[0] for el in bot]))
     grBauLower, grBauUpper, useless1, useless2 = importBAU(modelUtot, h, mmin, mmax)
     grBauUpper.SetLineWidth(6004)
@@ -225,12 +235,12 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     mgr.Add(grBauUpper)
     mgr.Add(grShip)
     mgr.Add(gr)
+    c1.SetLogy()
+    c1.SetLogx()
     mgr.Draw('alp')
     mgr.GetXaxis().SetMoreLogLabels()
     mgr.GetYaxis().SetRangeUser(1.e-12, 2.e-6)
-    mgr.GetXaxis().SetRangeUser(mmin, mmax)
-    c1.SetLogy()
-    c1.SetLogx()
+    mgr.GetXaxis().SetLimits(mmin, mmax)
     mgr.GetXaxis().SetTitle('HNL mass (GeV)')
     mgr.GetYaxis().SetTitle('U_{e}^{2} + U_{#mu}^{2} + U_{#tau}^{2}')
     c1.SetGrid()

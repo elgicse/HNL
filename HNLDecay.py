@@ -11,6 +11,92 @@ def BAU(m,pp):
 
 #fBau = r.TF1("Bau", "3.*(1e-8)*(1/x)", 1., 89.)
 
+def makeTLEPacceptance(model, mass, logU2min, logU2max):
+    pp = physicsParameters()
+    pp.setNMass(mass)
+    ep = experimentParams(pp, 'TLEP')
+    if pp.MN > pp.masses[pp.name2particle['Z']]:
+        print 'Too heavy for a Z factory!'
+        return 0.
+    model = model - 1
+    if model not in xrange(3):
+        print 'Please select model 1, 2 or 3'
+        return 0.
+    mz = pp.masses[pp.name2particle['Z']]
+    gamma = (mz/(2.*pp.MN)) + (pp.MN/(2.*mz))
+    coups = np.logspace(logU2min,logU2max,300).tolist()
+    accsV1, accsV2, lt, esp1, esp2 = [], [], [], [], []
+    for coupling in coups:
+        if model == 0:
+            couplings = [coupling, pp.models[model][1]*coupling, pp.models[model][2]*coupling]
+        elif model == 1:
+            couplings = [pp.models[model][0]*coupling, coupling, pp.models[model][2]*coupling]
+        elif model == 2:
+            couplings = [pp.models[model][0]*coupling, pp.models[model][1]*coupling, coupling]
+        pp.setNCoupling(couplings)
+        lt.append(pp.computeNLifetime())
+        accsV1.append(ep.TLEPacceptance(pp))
+        ep.Rmin = 1.e-4
+        ep.Rmax = 5.
+        accsV2.append(ep.TLEPacceptance(pp))
+        ep.Rmin = 1.e-3
+        ep.Rmax = 1.
+        try:
+            esp1.append(np.exp(-1.*1.e-3/(gamma*pp.c*pp.computeNLifetime())) - np.exp(-1./(gamma*pp.c*pp.computeNLifetime())))
+        except FloatingPointError:
+            esp1.append(0.0)
+        try:
+            esp2.append(np.exp(-1.*1.e-4/(gamma*pp.c*pp.computeNLifetime())) - np.exp(-5./(gamma*pp.c*pp.computeNLifetime())))
+        except FloatingPointError:
+            esp2.append(0.0)
+    accgrV1 = r.TGraph(len(coups),array('f',coups),array('f',accsV1))
+    accgrV2 = r.TGraph(len(coups),array('f',coups),array('f',accsV2))
+    c1 = r.TCanvas()
+    cSaver.append(c1)
+    accgrV1.SetLineWidth(3)
+    accgrV1.SetLineColor(r.kBlue)
+    accgrV1.SetMarkerColor(r.kBlue)
+    accgrV2.SetLineWidth(3)
+    accgrV2.SetLineColor(r.kRed)
+    accgrV2.SetMarkerColor(r.kRed)
+    accgr = r.TMultiGraph()
+    accgr.Add(accgrV1)
+    accgr.Add(accgrV2)
+    c1.SetLogy()
+    accgr.Draw('alp')
+    accgr.SetTitle('TLEP acceptance for HNL of mass M_{N}=%s GeV'%mass)
+    accgr.GetXaxis().SetTitle('U_{%s}^{2}'%(model+1))
+    accgr.GetXaxis().SetLimits(10.**logU2min, 10.**logU2max)
+    accgr.GetYaxis().SetTitle('P(vtx in detector)')
+    c1.SetLogx()
+    c1.Update()
+
+    mgesp = r.TMultiGraph()
+    gresp1 = r.TGraph(len(coups),array('f',coups),array('f',esp1))
+    gresp1.SetLineColor(r.kBlue)
+    gresp1.SetMarkerColor(r.kBlue)
+    gresp2 = r.TGraph(len(coups),array('f',coups),array('f',esp2))
+    gresp2.SetLineColor(r.kRed)
+    gresp2.SetMarkerColor(r.kRed)
+    mgesp.Add(gresp1)
+    mgesp.Add(gresp2)
+    c3 = r.TCanvas()
+    c3.SetLogy()
+    cSaver.append(c3)
+    mgesp.Draw('alp')
+    c3.SetLogx()
+
+    ltgr = r.TGraph(len(lt),array('f',coups),array('f',lt))
+    c2 = r.TCanvas()
+    cSaver.append(c2)
+    ltgr.Draw('alp')
+    c2.SetLogx()
+    c2.SetLogy()
+    return accgr, mgesp, ltgr
+
+
+
+
 def makeBRPlot(model):
     pp = physicsParameters()
     mz = pp.masses[pp.name2particle['Z']]
