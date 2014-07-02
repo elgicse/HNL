@@ -473,7 +473,7 @@ class experimentParams():
             return 0.
         esp1 = (-1.) * (start/costheta) / (gamma*ct)
         esp2 = (-1.) * (stop/costheta) / (gamma*ct)
-        np.seterr(all='raise')
+        #np.seterr(all='raise')
         try:
             result = np.nan_to_num(np.fabs( np.exp(esp1) - np.exp(esp2) ))
         except (ValueError, FloatingPointError):#, RuntimeWarning):
