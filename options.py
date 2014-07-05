@@ -44,7 +44,10 @@ class physicsParameters():
                         'Ds -> mu N',
                         'tau -> mu N nu',
                         'tau -> e N nu',
-                        'Ds -> nu tau']
+                        'Ds -> nu tau',
+                        'D -> K mu N',
+                        'D -> K e N',
+                        'Ds -> e N']
         self.masses = {'mu':0.10565*self.MeV,
                     'e':0.000511*self.MeV,
                     'tau':1.7768*self.MeV,
@@ -93,6 +96,9 @@ class physicsParameters():
                             'bottom':'bottom',
                             'W':'W',
                             'Z':'Z', 'Z0':'Z'}
+        self.particle2id = {'D':411,
+                            'D0':421, # NOTA: ATTENZIONE QUESTO SAREBBE D0
+                            'Ds':431}
         self.alphaQED = 1./137.
         self.heV = 6.58211928*pow(10.,-16)
         self.hGeV = self.heV * pow(10.,-9)
@@ -100,6 +106,7 @@ class physicsParameters():
         self.GF = 1.166379e-05 # Fermi's constant (GeV^-2)
         self.s2thetaw = 0.23126 # square sine of the Weinberg angle
         self.fpi = 0.1307 # from http://pdg.lbl.gov/2006/reviews/decaycons_s808.pdf
+        self.fD = 0.2226
         self.decayConstant = {'pi':0.1307, #GeV
                             'pi0':0.130, #GeV
                             'rho':0.102, #GeV
@@ -124,7 +131,61 @@ class physicsParameters():
                         (5,2):self.CKM.Vts**2., (2,5):self.CKM.Vts**2.,
                         (5,4):self.CKM.Vtb**2., (4,5):self.CKM.Vtb**2.}
         self.Xcc = 0.45e-03
+        #self.w2body = {}
+        self.w3body = {}
         #self.lifetimeFun = interpNLifetime('NLifetime.dat')
+    def phsp2body(self, mH, mN, ml):
+        p1 = 1. - mN**2./mH**2. + 2.*(ml**2./mH**2.) + (ml**2./mH**2.)*(1. - (ml**2./mH**2.))
+        p2 = ( 1. + (mN**2./mH**2.) - (ml**2./mH**2.) )**2. - 4.*(mN**2./mH**2.)
+        p3 = math.sqrt( p2 )
+        return p1*p3
+    def Integrate3Body(self, mH, mh, mN, ml, nToys=1000):
+        #### Setting up the parameters for generation
+        W = r.TLorentzVector(0., 0., 0., mH)
+        masses = array('d', [mh, mN, ml])
+        event = r.TGenPhaseSpace()
+        event.SetDecay(W, 3, masses)
+        Nq2 = 20 
+        NEN = 20
+        ENMax = (mH-mh)
+        ENMax =  r.TMath.Sqrt(((ENMax**2-ml**2-mN**2)/2.)**2+mN**2)
+        hist = r.TH2F("hist", "", Nq2, (ml+mN)**2, (mH-mh)**2, NEN, mN, ENMax)
+        ###### Integral
+        Integral = 0.
+        #### For loop in order to integrate
+        for i in xrange(nToys):
+            event.Generate()
+            #### Getting momentum of the daughters
+            ph = event.GetDecay(0)
+            pN    = event.GetDecay(1)
+            pl    = event.GetDecay(2)
+            #### Computing the parameters to compute the phase space
+            q = pl+pN
+            q2 = q.M2()
+            EN = pN.E()
+            iBin = hist.Fill(q2, EN)
+            if hist.GetBinContent(iBin)==1.:
+                val = PhaseSpace3Body(q2, EN, mH, mh, mN, ml)
+                Integral+=val*hist.GetXaxis().GetBinWidth(1)*hist.GetYaxis().GetBinWidth(1)
+        hist.Delete()    
+        return Integral
+    def computeProductionWeights(self, lepton):
+        #if self.MN > self.masses[self.name2particle['Ds']] - self.masses[self.name2particle[lepton]]:
+        #    self.w2body[lepton] = 0.
+        #else:
+        if self.MN > self.masses[self.name2particle['Ds']] - self.masses[self.name2particle[lepton]] - self.masses[self.name2particle['D']]:
+            self.w3body[lepton] = 0.
+            #self.w2body[lepton] = 1.
+        else:
+            wk = (1./self.MN**2.) * (1./self.fD**2.) * (1./self.masses[self.name2particle['Ds']]**2.) * (1./self.masses[self.name2particle['D']]) * (1./(8.*math.pi**2.))
+            wk *= self.Integrate3Body(self.masses[self.name2particle['D']], self.masses[self.name2particle['K']], self.MN, self.masses[self.name2particle[lepton]], nToys=1000)
+            wk = wk / self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[lepton]])
+            if wk > 1.:
+                wk = 1.
+            self.w3body[lepton] = wk
+            #self.w2body[lepton] = 1. - wk
+
+
     def setNCoupling(self, couplings):
         self.U2 = couplings
         self.U = [math.sqrt(ui) for ui in self.U2]
@@ -246,7 +307,7 @@ class physicsParameters():
     def NDecayWidth(self):
         if self.MN < 1.:
             totalWidth = ( self.Width_3nu()
-                    #+ sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
+                    + sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
                     + sum([self.Width_l1_l2_nu(a,b,g) for a in [1,2,3] for b in [1,2,3] for g in [1,2,3]]) )
         elif self.MN > 2.:
             totalWidth = ( self.Width_3nu() + sum([self.Width_l1_l2_nu(a,b,g) for a in range(1,10) for b in range(1,10) for g in [1,2,3]]) )
@@ -255,7 +316,7 @@ class physicsParameters():
             tempMass = self.MN
             self.MN = m1
             w1 = ( self.Width_3nu()
-                    #+ sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
+                    + sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])
                     + sum([self.Width_l1_l2_nu(a,b,g) for a in [1,2,3] for b in [1,2,3] for g in [1,2,3]]) )
             self.MN = m2
             w2 = ( self.Width_3nu() + sum([self.Width_l1_l2_nu(a,b,g) for a in range(1,10) for b in range(1,10) for g in [1,2,3]]) )
@@ -519,7 +580,7 @@ class decayNBody():
         self.kid2 = self.particles[2]
         self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2]])
         self.nbody = 2
-        if self.name in (self.pp.decays[:4]+['tau -> mu N nu', 'tau -> e N nu']):
+        if self.name in (self.pp.decays[:4]+['tau -> mu N nu', 'tau -> e N nu', 'D -> K mu N', 'D -> K e N']):
             self.nbody = 3
             self.kid3 = self.particles[3]
             self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2], self.pp.masses[self.kid3]])

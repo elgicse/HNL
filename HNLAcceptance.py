@@ -114,8 +114,18 @@ def computeNEvents(model, mass, coupling):
     """ Choose model 1, 2 or 3 """
     pp = physicsParameters()
     pp.setNMass(mass)
-    if pp.MN > pp.masses[pp.name2particle['Ds']]:
+
+    # Check kinematics
+    ml = 0.
+    if model == 1:
+        ml = pp.masses[pp.name2particle['e']]
+    elif model == 2:
+        ml = pp.masses[pp.name2particle['mu']]
+    if pp.MN > pp.masses[pp.name2particle['Ds']] - ml:
         return 0.
+    if (model == 3) and (pp.MN > pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle['mu']]):
+        return 0.
+
     model = model - 1
     if model == 0:
         couplings = [coupling, pp.models[model][1]*coupling, pp.models[model][2]*coupling]

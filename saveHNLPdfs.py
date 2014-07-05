@@ -35,21 +35,39 @@ class HistoHandler():
         self.prodHist.SetTitle("PDF for N production (m_{N}=%s GeV)"%(self.pp.MN))
         self.prodHist.GetXaxis().SetTitle("P_{N} [GeV]")
         self.prodHist.GetYaxis().SetTitle("#theta_{N} [rad]")
+        # Compute production channels weights
+        if self.model == 1:
+            lepton = 'e'
+        elif self.model == 2:
+            lepton = 'mu'
+        if (self.model == 1 or self.model == 2):
+            self.pp.computeProductionWeights(lepton)
+
         # Fill mass histogram
         for charm in self.charmTree:
-            pCharm = r.TLorentzVector(charm.CharmPx, charm.CharmPy, charm.CharmPz, charm.CharmE)
-            if self.model == 3:
-                self.ev.production.readString('Ds -> nu tau')
-            else:
-                self.ev.production.readString('Ds -> mu N')
-            self.ev.production.setPMother(pCharm)
-            pKid1, pKid2 = self.ev.production.makeDecay()
-            if self.model == 3:
-                pTau = r.TLorentzVector(pKid2)
-                self.ev.production.readString('tau -> mu N nu')
-                self.ev.production.setPMother(pTau)
+            if charm.CharmPID == self.pp.particle2id['Ds']:
+                pCharm = r.TLorentzVector(charm.CharmPx, charm.CharmPy, charm.CharmPz, charm.CharmE)
+                if self.model == 3:
+                    self.ev.production.readString('Ds -> nu tau')
+                else:
+                    self.ev.production.readString('Ds -> mu N')
+                self.ev.production.setPMother(pCharm)
+                pKid1, pKid2 = self.ev.production.makeDecay()
+                if self.model == 3:
+                    pTau = r.TLorentzVector(pKid2)
+                    self.ev.production.readString('tau -> mu N nu')
+                    self.ev.production.setPMother(pTau)
+                    pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
+                self.prodHist.Fill(pKid2.P(), pKid2.Theta())
+            elif ((charm.CharmPID == self.pp.particle2id['D'] or charm.CharmPID == self.pp.particle2id['D0'])
+                    and (self.pp.MN < self.pp.masses[self.pp.name2particle['D']] - self.pp.masses[self.pp.name2particle['K']] - self.pp.masses[self.pp.name2particle[lepton]])
+                    and (self.model == 1 or self.model == 2)):
+                pCharm = r.TLorentzVector(charm.CharmPx, charm.CharmPy, charm.CharmPz, charm.CharmE)
+                self.ev.production.readString('D -> K '+lepton+' N')
+                self.ev.production.setPMother(pCharm)
                 pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
-            self.prodHist.Fill(pKid2.P(), pKid2.Theta())
+                self.prodHist.Fill(pKid3.P()*self.pp.w3body[lepton], pKid3.Theta()*self.pp.w3body[lepton])
+
         # Make it a PDF
         #print self.pp.MN, self.pp.U2
         histInt = self.prodHist.Integral("width")
