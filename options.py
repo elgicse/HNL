@@ -20,6 +20,12 @@ class physicsParameters():
     def __init__(self):
         self.charmSourceFile = 'CharmFixTarget.root'
         self.charmTreeName = 'newTree'
+        # Contents of the source file
+        self.nD = 5635
+        self.nD0 = 11465
+        self.nDs = 1553
+        self.nTotCharm = self.nD + self.nD0 + self.nDs
+        #############################
         self.MeV = 1. #everything in GeV for now
         self.modelsSq = [(52.,1.,1.), (1.,16.,3.8), (0.061,1.,4.3)]
         models = self.modelsSq#[tuple([math.sqrt(i) for i in model]) for model in self.modelsSq]
@@ -134,8 +140,24 @@ class physicsParameters():
         #self.w2body = {}
         self.w3body = {}
         #self.lifetimeFun = interpNLifetime('NLifetime.dat')
+
+    def fplus(self, q2):
+        val = ((2.007)**2/((2.007)**2-q2))*0.727
+        return val
+    def fzero(self, q2):
+        val = ((1.870)**2/((1.870)**2-q2))*0.727
+        return val
+    def fminus(self, q2, mH, mh):
+        val = (self.fzero(q2)-self.fplus(q2))*(mH**2-mh**2)/q2
+        return val
+    def PhaseSpace3Body(self, q2, EN, mH, mh, mN, ml):
+        fp = self.fplus(q2)
+        fm = self.fminus(q2, mH, mh)
+        PhaseSpace = (fm**2)*(q2*(mN**2+ml**2)-(mN**2-ml**2)**2)+2.*fp*fm*((mN**2)*(2*mH**2-2*mh**2-4*EN*mH-ml**2+mN**2+q2)+(ml**2)*(4.*EN*mH+ml**2-mN**2-q2))
+        PhaseSpace += (fp**2)*((4.*EN*mH+ml**2-mN**2-q2)*(2.*mH**2-2.*mh**2-4.*EN*mH-ml**2+mN**2+q2)-(2.*mH**2+2.*mh**2-q2)*(q2-mN**2-ml**2))
+        return PhaseSpace
     def phsp2body(self, mH, mN, ml):
-        p1 = 1. - mN**2./mH**2. + 2.*(ml**2./mH**2.) + (ml**2./mH**2.)*(1. - (ml**2./mH**2.))
+        p1 = 1. - mN**2./mH**2. + 2.*(ml**2./mH**2.) + (ml**2./mN**2.)*(1. - (ml**2./mH**2.))
         p2 = ( 1. + (mN**2./mH**2.) - (ml**2./mH**2.) )**2. - 4.*(mN**2./mH**2.)
         p3 = math.sqrt( p2 )
         return p1*p3
@@ -165,7 +187,7 @@ class physicsParameters():
             EN = pN.E()
             iBin = hist.Fill(q2, EN)
             if hist.GetBinContent(iBin)==1.:
-                val = PhaseSpace3Body(q2, EN, mH, mh, mN, ml)
+                val = self.PhaseSpace3Body(q2, EN, mH, mh, mN, ml)
                 Integral+=val*hist.GetXaxis().GetBinWidth(1)*hist.GetYaxis().GetBinWidth(1)
         hist.Delete()    
         return Integral
@@ -173,11 +195,11 @@ class physicsParameters():
         #if self.MN > self.masses[self.name2particle['Ds']] - self.masses[self.name2particle[lepton]]:
         #    self.w2body[lepton] = 0.
         #else:
-        if self.MN > self.masses[self.name2particle['Ds']] - self.masses[self.name2particle[lepton]] - self.masses[self.name2particle['D']]:
+        if self.MN > self.masses[self.name2particle['D']] - self.masses[self.name2particle[lepton]] - self.masses[self.name2particle['K']]:
             self.w3body[lepton] = 0.
             #self.w2body[lepton] = 1.
         else:
-            wk = (1./self.MN**2.) * (1./self.fD**2.) * (1./self.masses[self.name2particle['Ds']]**2.) * (1./self.masses[self.name2particle['D']]) * (1./(8.*math.pi**2.))
+            wk = (1./self.MN**2.) * (1./self.fD**2.) * (1./self.masses[self.name2particle['D']]**2.) * (1./self.masses[self.name2particle['Ds']]) * (1./(8.*math.pi**2.))
             wk *= self.Integrate3Body(self.masses[self.name2particle['D']], self.masses[self.name2particle['K']], self.MN, self.masses[self.name2particle[lepton]], nToys=1000)
             wk = wk / self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[lepton]])
             if wk > 1.:
