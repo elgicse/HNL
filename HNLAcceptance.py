@@ -125,7 +125,6 @@ def computeNEvents(model, mass, coupling):
         return 0.
     if (model == 3) and (pp.MN > pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle['mu']]):
         return 0.
-
     model = model - 1
     if model == 0:
         couplings = [coupling, pp.models[model][1]*coupling, pp.models[model][2]*coupling]
@@ -149,7 +148,12 @@ def computeNEvents(model, mass, coupling):
             weight1 += hh.pp.findBranchingRatio(dec)*acc1
             weight2 += hh.pp.findBranchingRatio(dec)*acc2
             #print dec, weight1, weight2
-    NEv = (accv1*weight1 + accv2*weight2)*2.*hh.pp.Xcc*hh.pp.computeNProdBR(model)*hh.ep.protonFlux
+    # Production BR adjustments
+    if (hh.model) == 3:
+        adj = 1.
+    else:
+        adj = (hh.pp.nDs + (hh.pp.nD+hh.pp.nD0)*hh.pp.w3body[hh.lepton]) / hh.pp.nTotCharm
+    NEv = (accv1*weight1 + accv2*weight2)*2.*hh.pp.Xcc*hh.pp.computeNProdBR(model)*adj*hh.ep.protonFlux
     hh.weightedPDFoutfile.Close()
     hh.prodPDFoutfile.Close()
     hh.charmFile.Close()
