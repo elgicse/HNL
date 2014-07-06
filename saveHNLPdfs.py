@@ -60,8 +60,8 @@ class HistoHandler():
                     pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
                 self.prodHist.Fill(pKid2.P(), pKid2.Theta())
             elif ((charm.CharmPID == self.pp.particle2id['D'] or charm.CharmPID == self.pp.particle2id['D0'])
-                    and (self.pp.MN < self.pp.masses[self.pp.name2particle['D']] - self.pp.masses[self.pp.name2particle['K']] - self.pp.masses[self.pp.name2particle[lepton]])
-                    and (self.model == 1 or self.model == 2)):
+                    and (self.model == 1 or self.model == 2)
+                    and (self.pp.MN < self.pp.masses[self.pp.name2particle['D']] - self.pp.masses[self.pp.name2particle['K']] - self.pp.masses[self.pp.name2particle[lepton]])):
                 pCharm = r.TLorentzVector(charm.CharmPx, charm.CharmPy, charm.CharmPz, charm.CharmE)
                 self.ev.production.readString('D -> K '+lepton+' N')
                 self.ev.production.setPMother(pCharm)
