@@ -113,6 +113,7 @@ class physicsParameters():
         self.s2thetaw = 0.23126 # square sine of the Weinberg angle
         self.fpi = 0.1307 # from http://pdg.lbl.gov/2006/reviews/decaycons_s808.pdf
         self.fD = 0.2226
+        self.tauD = 1.e-12 #sec
         self.decayConstant = {'pi':0.1307, #GeV
                             'pi0':0.130, #GeV
                             'rho':0.102, #GeV
@@ -222,8 +223,10 @@ class physicsParameters():
         else:
             self.masses.update({'N':self.MN})
     def computeNProdBR(self, alpha):
-        alpha_BR = 3.6*1e-8/(6e-7)
-        self.BR = alpha_BR*self.U2[alpha]
+        #alpha_BR = 3.6*1e-8/(6e-7)
+        #self.BR = alpha_BR*self.U2[alpha]
+        alpha_BR = (self.tauD / self.hGeV) * (self.GF**2. * self.fD**2. * self.masses['D']**2. * self.CKM.Vcd**2.) / (8. * math.pi)
+        self.BR = alpha_BR * self.U2[alpha] * self.MN**2. * 2. #Majorana neutrinos --> x2!
         return self.BR
     #def computeNLifetime(self):
     #    alpha_LT = 3*1e-6*6e-7
