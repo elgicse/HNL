@@ -228,8 +228,9 @@ class physicsParameters():
     def computeNProdBR(self, alpha): # only for 2-body production!!
         #alpha_BR = 3.6*1e-8/(6e-7)
         #self.BR = alpha_BR*self.U2[alpha]
+        l = ['e','mu','tau']
         alpha_BR = (self.tauD / self.hGeV) * (self.GF**2. * self.fD**2. * self.masses['D']**2. * self.CKM.Vcd**2.) / (8. * math.pi)
-        ps = self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[lepton]])
+        ps = self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[l[alpha]]])
         self.BR = ps * alpha_BR * self.U2[alpha] * self.MN**2. * 2. #Majorana neutrinos --> x2!
         return self.BR
     #def computeNLifetime(self):
