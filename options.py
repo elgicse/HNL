@@ -38,6 +38,9 @@ class physicsParameters():
                         'N -> e e nu',
                         'N -> e mu nu',
                         'N -> mu mu nu',
+                        'N -> tau tau nu',
+                        'N -> e tau nu',
+                        'N -> mu tau nu',
                         'N -> pi0 nu',
                         'N -> pi e',
                         'N -> pi mu',
@@ -222,11 +225,12 @@ class physicsParameters():
             self.masses['N'] = self.MN
         else:
             self.masses.update({'N':self.MN})
-    def computeNProdBR(self, alpha):
+    def computeNProdBR(self, alpha): # only for 2-body production!!
         #alpha_BR = 3.6*1e-8/(6e-7)
         #self.BR = alpha_BR*self.U2[alpha]
         alpha_BR = (self.tauD / self.hGeV) * (self.GF**2. * self.fD**2. * self.masses['D']**2. * self.CKM.Vcd**2.) / (8. * math.pi)
-        self.BR = alpha_BR * self.U2[alpha] * self.MN**2. * 2. #Majorana neutrinos --> x2!
+        ps = self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[lepton]])
+        self.BR = ps * alpha_BR * self.U2[alpha] * self.MN**2. * 2. #Majorana neutrinos --> x2!
         return self.BR
     #def computeNLifetime(self):
     #    alpha_LT = 3*1e-6*6e-7
@@ -373,8 +377,14 @@ class physicsParameters():
             br = sum([self.Width_l1_l2_nu(1,1,l) for l in [1,2,3]]) / totalWidth
         elif decayString == 'N -> mu mu nu':
             br = sum([self.Width_l1_l2_nu(2,2,l) for l in [1,2,3]]) / totalWidth
+        elif decayString == 'N -> tau tau nu':
+            br = sum([self.Width_l1_l2_nu(3,3,l) for l in [1,2,3]]) / totalWidth
         elif decayString == 'N -> e mu nu':
             br = (sum([self.Width_l1_l2_nu(1,2,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(2,1,l) for l in [1,2,3]])) / totalWidth
+        elif decayString == 'N -> e tau nu':
+            br = (sum([self.Width_l1_l2_nu(1,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,1,l) for l in [1,2,3]])) / totalWidth
+        elif decayString == 'N -> mu tau nu':
+            br = (sum([self.Width_l1_l2_nu(2,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,2,l) for l in [1,2,3]])) / totalWidth
         elif decayString == 'N -> nu nu nu' or decayString == 'N -> 3nu':
             br = self.Width_3nu() / totalWidth
         elif decayString == 'N -> hadrons':
@@ -409,6 +419,30 @@ class physicsParameters():
             #    br = sum([self.Width_H_l('pi',l) + self.Width_H_l('rho',l) + self.Width_H0_nu('pi0',l) + self.Width_H0_nu('rho',l) + self.Width_H0_nu('eta',l) + self.Width_H0_nu('eta1',l) for l in [1,2,3]])/totalWidth
             #else:
             #    br = sum([self.Width_l1_l2_nu(a,b,g) for a in range(4,10) for b in range(4,10) for g in [1,2,3]])/totalWidth
+        elif decayString == 'N -> TLEP visible':
+            # eenu, mumunu, emunu
+            br0 = ( (sum([self.Width_l1_l2_nu(1,1,l) for l in [1,2,3]]) 
+                   + sum([self.Width_l1_l2_nu(2,2,l) for l in [1,2,3]])
+                   + (sum([self.Width_l1_l2_nu(1,2,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(2,1,l) for l in [1,2,3]]))
+                   )/ totalWidth )
+            br = br0
+            if self.MN > 2.:
+                br1 = ( (sum([self.Width_l1_l2_nu(a,b,g) for a in [4,7,9] for b in [5,6,8] for g in [1,2,3]]) +
+                        sum([self.Width_l1_l2_nu(a,b,g) for a in [5,6,8] for b in [4,7,9] for g in [1,2,3]]) +
+                        sum([self.Width_l1_l2_nu(3,3,l) for l in [1,2,3]]) + #tau tau nu
+                        (sum([self.Width_l1_l2_nu(1,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,1,l) for l in [1,2,3]])) + #e tau nu
+                        (sum([self.Width_l1_l2_nu(2,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,2,l) for l in [1,2,3]])) #mu tau nu
+                        )/ totalWidth )
+                br = br0 + br1
+            if 1. <= self.MN <= 2.:
+                m1, m2 = 1., 2.
+                tempMass = self.MN
+                self.MN = m2
+                br2 = ( (sum([self.Width_l1_l2_nu(a,b,g) for a in [4,7,9] for b in [5,6,8] for g in [1,2,3]]) +
+                        sum([self.Width_l1_l2_nu(a,b,g) for a in [5,6,8] for b in [4,7,9] for g in [1,2,3]])
+                        )/ totalWidth )
+                self.MN = tempMass
+                br = br0 + (self.MN - m1)*(br2 - br0)/(m2 - m1)
         else:
             print 'findBranchingRatio ERROR: unknown decay %s'%decayString
             sys.exit(-1)
@@ -434,6 +468,12 @@ class physicsParameters():
                                 allowedDecays.update({'N -> rho e':'yes'})
                                 if m > self.masses[self.name2particle['rho']] + self.masses[self.name2particle['mu']]:
                                     allowedDecays.update({'N -> rho mu':'yes'})
+                                    if m > self.masses[self.name2particle['e']] + self.masses[self.name2particle['tau']]:
+                                        allowedDecays.update({'N -> e tau nu':'yes'})
+                                        if m > self.masses[self.name2particle['mu']] + self.masses[self.name2particle['tau']]:
+                                            allowedDecays.update({'N -> mu tau nu':'yes'})
+                                            if m > 2.*self.masses[self.name2particle['tau']]:
+                                                allowedDecays.update({'N -> tau tau nu':'yes'})
         for decay in self.decays:
             if decay not in allowedDecays and decay.startswith('N'):
                 allowedDecays.update({decay:'no'})
@@ -605,7 +645,7 @@ class decayNBody():
         self.kid2 = self.particles[2]
         self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2]])
         self.nbody = 2
-        if self.name in (self.pp.decays[:4]+['tau -> mu N nu', 'tau -> e N nu', 'D -> K mu N', 'D -> K e N']):
+        if self.name in (self.pp.decays[:7]+['tau -> mu N nu', 'tau -> e N nu', 'D -> K mu N', 'D -> K e N']):
             self.nbody = 3
             self.kid3 = self.particles[3]
             self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2], self.pp.masses[self.kid3]])

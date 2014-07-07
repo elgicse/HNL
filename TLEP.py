@@ -40,10 +40,12 @@ def inTopHalf(p1,p2,datum):
         return True
     return False
 def make2Countours(data,m):
-    p1 = (math.log10(10.), -6.) #works for 10^12 Z
+    p1 = (math.log10(18.), -6.) #works for 10^12 Z
     #p1 = (math.log10(4.), -6.)
-    p2 = (math.log10(80.), math.log10(3.e-11)) # works for 10^12 Z
+    #p1 = (math.log10(20.), math.log10(1.e-6)) # works for 10^13 Z
+    p2 = (math.log10(70.), math.log10(1.e-10)) # works for 10^12 Z
     #p2 = (math.log10(20.), -9.)
+    #p2 = (math.log10(50.), math.log10(1.e-8)) # works for 10^13 Z
     xAxis = []
     for datum in data:
         xAxis.append(datum[0])
@@ -138,10 +140,11 @@ def computeNEventsTLEP(pp, ep, model, mass, coupling):
         couplings = [pp.models[model][0]*coupling, pp.models[model][1]*coupling, coupling]
     pp.setNCoupling(couplings)
     decList = pp.HNLAllowedDecays()
-    DetectableFraction = pp.findBranchingRatio('N -> charged hadrons')
-    for dec in decList:
-        if decList[dec] == 'yes' and (dec == 'N -> e e nu' or dec == 'N -> mu mu nu' or dec == 'N -> e mu nu'):
-            DetectableFraction += pp.findBranchingRatio(dec)
+    DetectableFraction = pp.findBranchingRatio('N -> TLEP visible') #(2l + nu) e (2jet + l)
+    #DetectableFraction = pp.findBranchingRatio('N -> charged hadrons')
+    #for dec in decList:
+    #    if decList[dec] == 'yes' and (dec == 'N -> e e nu' or dec == 'N -> mu mu nu' or dec == 'N -> e mu nu'):
+    #        DetectableFraction += pp.findBranchingRatio(dec)
     acc = ep.TLEPacceptance(pp)
     #print 'Acceptance: ', acc, '\tLT: ', pp.computeNLifetime(), '\tvTELEP: ', ep.Rmin, ep.Rmax, ep.nZ, '\tBR: ', DetectableFraction
     NEv = ep.BRZnunu * pp.factors[model] * 2 * ep.nZ * pp.U2[model] * acc * DetectableFraction # moltiplicare anche U2 per factor (U2 -> U2tot)???
@@ -201,7 +204,7 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     pp = physicsParameters()
 
     modelUtot=4 #U^2 tot
-    mmin, mmax = 0.2, 83.
+    mmin, mmax = 0.2, 85.
     h = 'normal'
     if model == 1:
         h = 'inverted'
