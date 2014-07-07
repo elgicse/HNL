@@ -439,7 +439,10 @@ class physicsParameters():
                 tempMass = self.MN
                 self.MN = m2
                 br2 = ( (sum([self.Width_l1_l2_nu(a,b,g) for a in [4,7,9] for b in [5,6,8] for g in [1,2,3]]) +
-                        sum([self.Width_l1_l2_nu(a,b,g) for a in [5,6,8] for b in [4,7,9] for g in [1,2,3]])
+                        sum([self.Width_l1_l2_nu(a,b,g) for a in [5,6,8] for b in [4,7,9] for g in [1,2,3]]) +
+                        sum([self.Width_l1_l2_nu(3,3,l) for l in [1,2,3]]) + #tau tau nu
+                        (sum([self.Width_l1_l2_nu(1,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,1,l) for l in [1,2,3]])) + #e tau nu
+                        (sum([self.Width_l1_l2_nu(2,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,2,l) for l in [1,2,3]])) #mu tau nu
                         )/ totalWidth )
                 self.MN = tempMass
                 br = br0 + (self.MN - m1)*(br2 - br0)/(m2 - m1)
