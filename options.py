@@ -444,7 +444,7 @@ class physicsParameters():
                         sum([self.Width_l1_l2_nu(3,3,l) for l in [1,2,3]]) + #tau tau nu
                         (sum([self.Width_l1_l2_nu(1,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,1,l) for l in [1,2,3]])) + #e tau nu
                         (sum([self.Width_l1_l2_nu(2,3,l) for l in [1,2,3]]) + sum([self.Width_l1_l2_nu(3,2,l) for l in [1,2,3]])) #mu tau nu
-                        )/ totalWidth )
+                        )/ totalWidth ) + br0
                 self.MN = tempMass
                 br = br0 + (self.MN - m1)*(br2 - br0)/(m2 - m1)
         else:
