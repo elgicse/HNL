@@ -36,7 +36,7 @@ def HNLDecayChain(hh, decayString, pN):
     kids = []
     if decayString == 'N -> nu nu nu':
         kids = []
-    elif decayString in hh.pp.decays[:4]: # 3-body, return the first two
+    elif decayString in hh.pp.decays[:7]: # 3-body, return the first two
         hh.ev.decay.readString(decayString)
         hh.ev.decay.setPMother(pN)
         pGKid1, pGKid2, pGKid3 = hh.ev.decay.makeDecay()
@@ -50,7 +50,7 @@ def HNLDecayChain(hh, decayString, pN):
         pGKid1, pGKid2 = hh.ev.decay.makeDecay()
         pPi1, pPi2 = r.TLorentzVector(pGKid1), r.TLorentzVector(pGKid2)
         kids = [pPi1, pPi2]
-    elif decayString in hh.pp.decays[8:10]: # N -> rho l
+    elif decayString in hh.pp.decays[11:13]: # N -> rho l
         hh.ev.decay.readString(decayString)
         hh.ev.decay.setPMother(pN)
         pGKid1, pGKid2 = hh.ev.decay.makeDecay() # rho+lepton
