@@ -142,7 +142,8 @@ def readFile(filename):
 
 if __name__ == '__main__':
     verbose = True
-    model = 3
+    model = 1
+    print "Scanning model %s..."%model
     existingData3 = loadDataFile(model)
     data3 = makeSensitivityBelt(existingData3, model, 102, 100, verbose)
     existingData3 = convertToLog(existingData3)
@@ -156,6 +157,7 @@ if __name__ == '__main__':
     bot3.sort(key=lambda x: x[0])
     num3 = len(bot3)
     gr3 = r.TGraph(num3+1)
+    pp = physicsParameters()
     for i in xrange(len(bot3)):
         gr3.SetPoint(i,10.**bot3[i][0],pp.factors[model-1]*10.**bot3[i][1])
     gr3.SetPoint(num3,max([10.**x[0] for x in bot3]),max([10.**x[1] for x in bot3]))
@@ -169,7 +171,7 @@ if __name__ == '__main__':
     gr3.SetLineColor(r.kBlue)
     gr3.SetMarkerColor(r.kBlue)
     gr3.SetTitle('HNL model III - ignore BAUs')
-    graphFile = r.TFile('out/plots/grModel%s'%model, 'recreate')
+    graphFile = r.TFile('out/plots/grModel%s.root'%model, 'recreate')
     gr3.Write()
     graphFile.Close()
 
