@@ -66,7 +66,7 @@ def makeSensitivityBelt(existingData, model, ndivx, ndivy, verbose=0):
         logeps = roundToN(point[1])
         datum = ( logmass, logeps, n)
         if verbose:
-            if not i%5:
+            if not i%50:
                 print "Point %s of %s: \t log10(mass) %s \t log10(U2) %s \t\t Events: %s"%(i, len(points), logmass, logeps, n)
                 gc.collect()
         data.append(datum)
@@ -161,6 +161,65 @@ if __name__ == '__main__':
     for i in xrange(len(bot3)):
         gr3.SetPoint(i,10.**bot3[i][0],pp.factors[model-1]*10.**bot3[i][1])
     gr3.SetPoint(num3,max([10.**x[0] for x in bot3]),max([10.**x[1] for x in bot3]))
+
+    # qui provo a smoothare
+    logGraphTemp = r.TGraph(len(bot3))
+    for i in xrange(len(bot3)):
+        logGraphTemp.SetPoint(i, bot3[i][0], bot3[i][1])
+    logGraphOut1 = r.TGraph(len(bot3))
+    logGraphOut2 = r.TGraph(len(bot3))
+    logGraphOut3 = r.TGraph(len(bot3))
+    logGraphSmoother1 = r.TGraphSmooth()
+    logGraphSmoother2 = r.TGraphSmooth()
+    logGraphSmoother3 = r.TGraphSmooth()
+    logGraphOut1 = logGraphSmoother1.SmoothLowess(logGraphTemp)
+    logGraphOut2 = logGraphSmoother2.SmoothKern(logGraphTemp)
+    logGraphOut3 = logGraphSmoother3.SmoothSuper(logGraphTemp)
+    cSmooth = r.TCanvas()
+    cSmooth.Divide(2,3)
+    cSmooth.cd(1)
+    logGraphTemp.SetTitle('Log Original')
+    logGraphTemp.Draw('alp')
+    cSmooth.cd(2)
+    logGraphNoErrs1 = r.TGraph(logGraphOut1.GetN(),logGraphOut1.GetX(),logGraphOut1.GetY())
+    logGraphNoErrs1.SetTitle('Log Lowess')
+    logGraphNoErrs1.Draw('alp')
+    cSmooth.cd(3)
+    logGraphNoErrs2 = r.TGraph(logGraphOut2.GetN(),logGraphOut2.GetX(),logGraphOut2.GetY())
+    logGraphNoErrs2.SetTitle('Log Kern')
+    logGraphNoErrs2.Draw('alp')
+    cSmooth.cd(4)
+    logGraphNoErrs3 = r.TGraph(logGraphOut3.GetN(),logGraphOut3.GetX(),logGraphOut3.GetY())
+    logGraphNoErrs3.SetTitle('Log Super')
+    logGraphNoErrs3.Draw('alp')
+    cp5 = cSmooth.cd(5)
+    GraphTemp = r.TGraph(len(bot3)+1)
+    for i in xrange(len(bot3)):
+        GraphTemp.SetPoint(i, 10.**bot3[i][0], pp.factors[model-1]*10.**bot3[i][1])
+    GraphTemp.SetPoint(num3,max([10.**x[0] for x in bot3]),max([10.**x[1] for x in bot3]))
+    cp5.SetLogx()
+    cp5.SetLogy()
+    GraphTemp.SetTitle('Original')
+    GraphTemp.Draw('alp')
+    cp6 = cSmooth.cd(6)
+    npGraph3 = logGraphOut3.GetN()
+    print npGraph3, logGraphOut3.GetX()[2]
+    GraphNoErrs3 = r.TGraph(npGraph3+1)
+    print type(logGraphOut3.GetX())
+    tempx = logGraphOut3.GetX()
+    tempy = logGraphOut3.GetY()
+    gc.collect()
+    for i in xrange(npGraph3):
+        GraphNoErrs3.SetPoint(i, 10.**tempx[i], pp.factors[model-1]*10.**tempy[i])
+    GraphNoErrs3.SetPoint(npGraph3, 10.**max([xi for xi in tempx]), 10.**max([yi for yi in tempy]))
+    cp6.SetLogx()
+    cp6.SetLogy()
+    GraphNoErrs3.SetTitle('Super')
+    GraphNoErrs3.Draw('alp')
+
+
+
+
     #gr3 = r.TGraph(num3+2)
     #for i in xrange(len(bot3)):
     #    gr3.SetPoint(i,10.**bot3[i][0],10.**bot3[i][1])
