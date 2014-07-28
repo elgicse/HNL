@@ -1,5 +1,6 @@
 from __future__ import division
 import os
+import struct
 from HNLAcceptance import *
 
 ppp = physicsParameters()
@@ -203,11 +204,13 @@ if __name__ == '__main__':
     GraphTemp.Draw('alp')
     cp6 = cSmooth.cd(6)
     npGraph3 = logGraphOut3.GetN()
-    print npGraph3, logGraphOut3.GetX()[2]
     GraphNoErrs3 = r.TGraph(npGraph3+1)
-    print type(logGraphOut3.GetX())
-    tempx = logGraphOut3.GetX()
-    tempy = logGraphOut3.GetY()
+    tempx_buff = logGraphOut3.GetX()
+    tempx_buff.SetSize(npGraph3)
+    tempx = np.array(tempx_buff, copy=True)
+    tempy_buff = logGraphOut3.GetY()
+    tempy_buff.SetSize(npGraph3)
+    tempy = np.array(tempy_buff, copy=True)
     gc.collect()
     for i in xrange(npGraph3):
         GraphNoErrs3.SetPoint(i, 10.**tempx[i], pp.factors[model-1]*10.**tempy[i])
@@ -215,6 +218,7 @@ if __name__ == '__main__':
     cp6.SetLogx()
     cp6.SetLogy()
     GraphNoErrs3.SetTitle('Super')
+    GraphNoErrs3.SetName('Super')
     GraphNoErrs3.Draw('alp')
 
 
@@ -232,6 +236,7 @@ if __name__ == '__main__':
     gr3.SetTitle('HNL model III - ignore BAUs')
     graphFile = r.TFile('out/plots/grModel%s.root'%model, 'recreate')
     gr3.Write()
+    GraphNoErrs3.Write()
     graphFile.Close()
 
     ascisse = [x[0] for x in bot3]
@@ -273,6 +278,10 @@ if __name__ == '__main__':
     grbh.SetLineColor(r.kBlack)
     grbh.SetMarkerColor(r.kBlack)
 
+    GraphNoErrs3.SetLineWidth(1004)
+    GraphNoErrs3.SetFillStyle(3002)
+    GraphNoErrs3.SetLineColor(r.kRed)
+    GraphNoErrs3.SetMarkerColor(r.kRed)
 
     c3 = r.TCanvas()
     c3.SetLogx()
@@ -282,6 +291,7 @@ if __name__ == '__main__':
     gr.Add(grbl)
     gr.Add(grss)
     gr.Add(gr3)
+    gr.Add(GraphNoErrs3)
     gr.Add(grline)
     gr.Add(grline2)
     gr.Draw('alp')

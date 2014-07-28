@@ -140,15 +140,15 @@ def phsp2body(mH, mN, ml):
     return p1*p3
 
 
-#BR = ComputeBR3Body(U2, mass, tauD, mD, mK, Vcs, ml)
-#print "The BR(D) is ",BR
+BR = ComputeBR3Body(U2, mass, tauD, mD, mK, Vcs, ml)
+print "The BR(D) is ",BR
 
-#BR = ComputeBR3Body(U2, mass, tauD0, mD0, mK, Vcs, ml)
-#print "The BR(D0) is ",BR
+BR = ComputeBR3Body(U2, mass, tauD0, mD0, mK, Vcs, ml)
+print "The BR(D0) is ",BR
 
 
-#BR = ComputeBR3Body(U2, mass, tauD0, mD0, mpi, Vcd, ml)
-#print "The BR(D0) is ",BR
+BR = ComputeBR3Body(U2, mass, tauD0, mD0, mpi, Vcd, ml)
+print "The BR(D0) is ",BR
 
 #mass = 2.0
 #U2 = 3e-7

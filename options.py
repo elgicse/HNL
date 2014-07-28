@@ -4,7 +4,8 @@ import math
 import ROOT as r
 import numpy as np
 from array import array
-from scipy import interpolate 
+from scipy import interpolate
+import tauToN
 
 
 def roundToN(x, n=2):
@@ -117,6 +118,7 @@ class physicsParameters():
         self.fpi = 0.1307 # from http://pdg.lbl.gov/2006/reviews/decaycons_s808.pdf
         self.fD = 0.2226
         self.tauD = 1.e-12 #sec
+        self.tauTau = 2.91e-13 #sec
         self.decayConstant = {'pi':0.1307, #GeV
                             'pi0':0.130, #GeV
                             'rho':0.102, #GeV
@@ -141,6 +143,7 @@ class physicsParameters():
                         (5,2):self.CKM.Vts**2., (2,5):self.CKM.Vts**2.,
                         (5,4):self.CKM.Vtb**2., (4,5):self.CKM.Vtb**2.}
         self.Xcc = 0.45e-03
+        self.BRDsToTau = 0.0543
         #self.w2body = {}
         self.w3body = {}
         #self.lifetimeFun = interpNLifetime('NLifetime.dat')
@@ -174,7 +177,7 @@ class physicsParameters():
         Nq2 = 20 
         NEN = 20
         ENMax = (mH-mh)
-        ENMax =  r.TMath.Sqrt(((ENMax**2-ml**2-mN**2)/2.)**2+mN**2)
+        ENMax =  r.TMath.Sqrt(((ENMax**2-ml**2-mN**2)/2.)**2+mN**2) # converte massa max ad energia max
         hist = r.TH2F("hist", "", Nq2, (ml+mN)**2, (mH-mh)**2, NEN, mN, ENMax)
         ###### Integral
         Integral = 0.
@@ -228,10 +231,13 @@ class physicsParameters():
     def computeNProdBR(self, alpha): # only for 2-body production!!
         #alpha_BR = 3.6*1e-8/(6e-7)
         #self.BR = alpha_BR*self.U2[alpha]
-        l = ['e','mu','tau']
-        alpha_BR = (self.tauD / self.hGeV) * (self.GF**2. * self.fD**2. * self.masses['D']**2. * self.CKM.Vcd**2.) / (8. * math.pi)
-        ps = self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[l[alpha]]])
-        self.BR = ps * alpha_BR * self.U2[alpha] * self.MN**2. * 2. #Majorana neutrinos --> x2!
+        if alpha<2: #prod from Ue, Umu
+            l = ['e','mu','tau']
+            alpha_BR = (self.tauD / self.hGeV) * (self.GF**2. * self.fD**2. * self.masses['D']**2. * self.CKM.Vcd**2.) / (8. * math.pi)
+            ps = self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[l[alpha]]])
+            self.BR = ps * alpha_BR * self.U2[alpha] * self.MN**2. * 2. #Majorana neutrinos --> x2!
+        elif alpha==2: #prod from Utau
+            self.BR = tauToN.brTauToNuEllN(self,'e') + tauToN.brTauToNuEllN(self,'mu') + tauToN.brTauToPiN(self)
         return self.BR
     #def computeNLifetime(self):
     #    alpha_LT = 3*1e-6*6e-7
