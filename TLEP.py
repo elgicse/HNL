@@ -5,16 +5,17 @@ from options import *
 from scan import *
 from BauLimits import *
 
-cSaver = []
+cSaver = [] # Keep canvases open
+
+# All these functions are needed to look separately for the upper and lower sensitivity contours...
+
 # Sensitivity scan mass range
 start = [math.log10(0.1)]*3 #GeV
 stop = [math.log10(85.)]*3 #GeV
 # Sensitivity scan U^2 range
-#yStart = [math.log10(5.e-06)]*3
 yStop = [math.log10(1.e-5)]*3
 yStart = [math.log10(1.e-13)]*3
 
-################### there is also an upper bound... ##################
 #a = math.log10(0.1) # works for 10^12 Z
 a = math.log10(0.1)
 aa = math.log10(20.)
@@ -29,22 +30,23 @@ sl2 = (-11.-math.log10(1.2e-7))/(math.log10(20.)-math.log10(1.))
 #newy1 = [-6., math.log10(3.e-8)] # works for 10^12 Z
 newy1 = [math.log10(3.e-5), math.log10(3.e-9)]
 newy2 = [math.log10(5.e-4), math.log10(8.e-6)]
+
 def inBeltSegments((x,y)):
     if (a < x < e) and (beltSegment(lower, newy1, aa, sl1, x) < y < beltSegment(upper, newy1, aa, sl1, x)): # sopra
         return True
     elif (a < x < e) and (beltSegment(lower, newy2, a, sl2, x) < y < beltSegment(upper, newy2, a, sl2, x)): # sotto
         return True
     return False
+
 def inTopHalf(p1,p2,datum):
     if datum[1] > lineForTwoPoints(p1,p2,datum[0]):
         return True
     return False
+
 def make2Countours(data,m):
     p1 = (math.log10(18.), -6.) #works for 10^12 Z
-    #p1 = (math.log10(4.), -6.)
     #p1 = (math.log10(20.), math.log10(1.e-6)) # works for 10^13 Z
     p2 = (math.log10(70.), math.log10(1.e-10)) # works for 10^12 Z
-    #p2 = (math.log10(20.), -9.)
     #p2 = (math.log10(50.), math.log10(1.e-8)) # works for 10^13 Z
     xAxis = []
     for datum in data:
@@ -79,7 +81,8 @@ def make2Countours(data,m):
     top = list(set(top))
     bot = list(set(bot))
     return top, bot
-def closestCut(data,m):
+
+def closestCut(data,m): # Find the point of the parameter space where N(evts) is closest to 2.3 and is > 0
     useful = [dat for dat in data if dat[2]>0]
     if useful:
         result = min(useful, key=lambda x: math.fabs(x[2]-m))
@@ -87,6 +90,7 @@ def closestCut(data,m):
     else:
         return False
 ######################################################################
+
 
 def BAU(m,pp):
     return 2.e-6*(1/m**2.)*((1.-(m**2./pp.masses[pp.name2particle['W']]**2.))**2.)
@@ -99,20 +103,13 @@ def makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nZ, verbo
     ep.Rmin = Rmin
     ep.Rmax = Rmax
     ep.nZ = nZ
+    # Next two lines are useless. It is faster if you recompute the data each time.
     print 'Loaded %s previous data points.'%len(existingData)
     outFilePath = "out/TextData/sensitivityScan-HNLatTLEP-model%s-%s-%s-%s.txt"%(model,ep.Rmin,ep.Rmax,ep.nZ)
     tic = timeit.default_timer()
     for i,point in enumerate(points):
-    #    found = False
         mass = roundToN( pow(10.,point[0]),3 )
         eps  = roundToN( pow(10.,point[1]),3 )
-    #    for oldDatum in existingData:
-    #        if eq(mass, oldDatum[0]) and eq(eps, oldDatum[1]):
-    #            found = True
-    #            n = oldDatum[2]
-    #            break
-    #    if not found:
-    #    # indent next line
         n = roundToN( computeNEventsTLEP(pp, ep, model, mass, eps),3 )
         logmass = roundToN(point[0],3)
         logeps = roundToN(point[1],3)
@@ -140,22 +137,9 @@ def computeNEventsTLEP(pp, ep, model, mass, coupling):
         couplings = [pp.models[model][0]*coupling, pp.models[model][1]*coupling, coupling]
     pp.setNCoupling(couplings)
     decList = pp.HNLAllowedDecays()
-    DetectableFraction = pp.findBranchingRatio('N -> TLEP visible') #(2l + nu) e (2jet + l)
-    #DetectableFraction = pp.findBranchingRatio('N -> charged hadrons')
-    #for dec in decList:
-    #    if decList[dec] == 'yes' and (dec == 'N -> e e nu' or dec == 'N -> mu mu nu' or dec == 'N -> e mu nu'):
-    #        DetectableFraction += pp.findBranchingRatio(dec)
+    DetectableFraction = pp.findBranchingRatio('N -> TLEP visible') #(2l + nu) and (2jet + l)
     acc = ep.TLEPacceptance(pp)
-    #print 'Acceptance: ', acc, '\tLT: ', pp.computeNLifetime(), '\tvTELEP: ', ep.Rmin, ep.Rmax, ep.nZ, '\tBR: ', DetectableFraction
-    NEv = ep.BRZnunu * pp.factors[model] * 2 * ep.nZ * pp.U2[model] * acc * DetectableFraction # moltiplicare anche U2 per factor (U2 -> U2tot)???
-    #with open(outFilePath,"a") as ofile:
-    #    try:
-    #        ofile.write('%s \t %s \t %s \t %s \t %s\n'%(mass, coupling,
-    #            DetectableFraction, acc, NEv))
-    #    except KeyboardInterrupt:
-    #        pass
-    #        #ofile.close()
-    #        #sys.exit(-1)
+    NEv = ep.BRZnunu * pp.factors[model] * 2 * ep.nZ * pp.U2[model] * acc * DetectableFraction # pp.factors scales U2_dom to U2_tot
     return NEv
 
 def loadDataFileTLEP(model, Rmin, Rmax, nZ):
@@ -194,46 +178,21 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     for i in xrange(len(bot)):
         grRaw.SetPoint(i+len(top),10.**bot[i][0],pp.factors[model-1]*10.**bot[i][1])
     grRaw.SetLineWidth(4)
-    #gr.SetLineWidth(-1004)
-    #gr.SetFillStyle(3002)
     grRaw.SetLineColor(r.kOrange-3)
     grRaw.SetMarkerColor(r.kOrange-3)
-    #gr.SetLineColor(r.kMagenta)
-    #gr.SetMarkerColor(r.kMagenta)
     grRaw.SetTitle('TLEP')
     grRaw.SetName('TLEP')
 
-
-    #grRawLog = r.TGraph(len(bot)+len(top))
-    #for i in xrange(len(top)):
-    #    grRawLog.SetPoint(i,top[i][0],top[i][1])
-    #for i in xrange(len(bot)):
-    #    grRawLog.SetPoint(i+len(top),bot[i][0],bot[i][1])
-    #grSmoothLog = r.TGraph(grRawLog.GetN())
-    #grSmoother = r.TGraphSmooth()
-    #grSmoothLog = grSmoother.SmoothSuper(grRawLog)
-    #npoints = grSmoothLog.GetN()
-    #tempx_buff = grSmoothLog.GetX()
-    #tempx_buff.SetSize(npoints)
-    #tempx = np.array(tempx_buff, copy=True)
-    #tempy_buff = grSmoothLog.GetY()
-    #tempy_buff.SetSize(npoints)
-    #tempy = np.array(tempy_buff, copy=True)
-    #grSmooth = r.TGraph(npoints)
-    #for i in xrange(npoints):
-    #    grSmooth.SetPoint(i, 10.**tempx[i], pp.factors[model-1]*10.**tempy[i])
-    #grSmooth.SetLineColor(r.kMagenta)
-    #grSmooth.SetMarkerColor(r.kMagenta)
-
-
     pp = physicsParameters()
 
+    # Import BAU limits
+    # Depends: BauLimits.py
+    # Depends: content of subfolder Limits/existing/data
     modelUtot=4 #U^2 tot
     mmin, mmax = 0.2, 85.
     h = 'normal'
     if model == 1:
         h = 'inverted'
-    #grBauLower, grBauUpper, useless1, useless2 = importBAU(model, 'normal', min([10.**el[0] for el in bot]), max([10.**el[0] for el in bot]))
     grBauLower, grBauUpper, useless1, useless2 = importBAU(modelUtot, h, mmin, mmax)
     grBauUpper.SetTitle('BAUupper')
     grBauUpper.SetName('BAUupper')
@@ -246,6 +205,9 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     grBauLower.SetFillStyle(3002)
     grBauLower.SetLineColor(r.kBlack)
 
+    # Import Seesaw limits
+    # Depends: BauLimits.py
+    # Depends: content of subfolder Limits/existing/data
     grbbn = importBBN(modelUtot,h, mmin, mmax)
     grbbn.SetTitle('BBN')
     grbbn.SetName('BBN')
@@ -255,15 +217,18 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     grbbn.SetLineStyle(7)
     grbbn.SetFillStyle(3002)
 
+    # Import SHiP sensitivity
+    # Depends: content of subfolder out/plots
     grShipFile = r.TFile('out/plots/grModel%s.root'%(model), 'read')
-    #grShip = r.TGraph(grShipFile.Get('Graph'))
-    grShip = r.TGraph(grShipFile.Get('Super'))
+    #grShip = r.TGraph(grShipFile.Get('Graph')) # Raw graph
+    grShip = r.TGraph(grShipFile.Get('Super')) # Smoothed graph
     grShip.SetTitle('SHiP')
     grShip.SetName('SHiP')
     grShip.SetLineWidth(4)
     grShip.SetLineColor(r.kBlue)
     grShip.SetMarkerColor(r.kBlue)
 
+    # Draw all together
     r.gStyle.SetPadTopMargin(0.10);
     r.gStyle.SetPadRightMargin(0.05);
     r.gStyle.SetPadBottomMargin(0.13);
@@ -276,7 +241,6 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     mgr.Add(grBauUpper)
     mgr.Add(grShip)
     mgr.Add(grRaw)
-    #mgr.Add(grSmooth)
     c1.SetLogy()
     c1.SetLogx()
     if h == 'inverted':        
@@ -334,6 +298,8 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     c1.SetTicky()
     c1.Update()
 
+    # Save everything in a rootfile
+    # Depends: folder out/plots/perNicola
     filecontuttodentro = r.TFile('out/plots/perNicola/model%s_%s_%sZ.root'%(model,h,nZ),'recreate')
     mgr.Write()
     c1.Write()
@@ -349,22 +315,14 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     return mgr, bot, top, grShipFile, labels, leg
 
 
+# Merge graph for 10^12 and 10^13 Z0 @ TLEP
+# (For now only normal hierarchy)
+# Depends: plots in out/plots/perNicola
+# generated by the above function
 def merge1213nh():
     f13 = r.TFile('out/plots/perNicola/model2_normal_1e+13Z.root','read')
     f12 = r.TFile('out/plots/perNicola/model2_normal_1e+12Z.root','read')
     mgr = f12.Get('mgr_normal_1e+12')
-
-    #gr12 = r.TGraph(f12.Get('TLEP'))
-    #gr12out = r.TGraph(gr12.GetN())
-    #g12smoother = r.TGraphSmooth('g')
-    #gr12out = g12smoother.SmoothLowess(gr12)
-    #c2 = r.TCanvas()
-    #cSaver.append(c2)
-    #c2.SetLogy()
-    #c2.SetLogx()
-    #gr12out.Draw('alp')
-    #gr12out.Print()
-
     gr13 = r.TGraph(f13.Get('TLEP'))
     gr13.SetLineStyle(9)
     mgr.Add(gr13)
@@ -390,7 +348,6 @@ def merge1213nh():
     leg.AddEntry(f12.Get('SHiP'),'SHiP','lp')
     leg.AddEntry(f12.Get('TLEP'),'TLEP 10^{12}Z^{0}, 1mm<r<1m','lp')
     leg.AddEntry(gr13,'TLEP 10^{13}Z^{0}, 100#mum<r<5m','lp')
-    #leg.AddEntry(0,'','')
     leg.SetFillColor(r.kWhite)
     leg.SetTextSize(0.043)
     leg.Draw()
