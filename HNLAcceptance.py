@@ -149,7 +149,7 @@ def computeNEvents(model, mass, coupling):
             weight2 += hh.pp.findBranchingRatio(dec)*acc2
             #print dec, weight1, weight2
     # Production BR adjustments
-    if (hh.model+1) == 3:
+    if (model+1) == 3:
         adj = (hh.pp.nDs/hh.pp.nTotCharm)*hh.pp.BRDsToTau
     else:
         adj = (hh.pp.nDs + (hh.pp.nD+hh.pp.nD0)*hh.pp.w3body[hh.lepton]) / hh.pp.nTotCharm
