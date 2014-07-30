@@ -207,7 +207,7 @@ class physicsParameters():
             #self.w2body[lepton] = 1.
         else:
             wk = (1./self.MN**2.) * (1./self.fD**2.) * (1./self.masses[self.name2particle['D']]**2.) * (1./self.masses[self.name2particle['Ds']]) * (1./(8.*math.pi**2.))
-            wk *= self.Integrate3Body(self.masses[self.name2particle['D']], self.masses[self.name2particle['K']], self.MN, self.masses[self.name2particle[lepton]], nToys=1000)
+            wk *= self.Integrate3Body(self.masses[self.name2particle['D']], self.masses[self.name2particle['K']], self.MN, self.masses[self.name2particle[lepton]], nToys=300)
             wk = wk / self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[lepton]])
             if wk > 1.:
                 wk = 1.

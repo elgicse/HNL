@@ -145,14 +145,57 @@ def readFile(filename):
 
 if __name__ == '__main__':
     verbose = True
-    model = 3
+    model = 1
     print "Scanning model %s..."%model
     existingData3 = loadDataFile(model)
-    data3 = makeSensitivityBelt(existingData3, model, 102, 100, verbose)
+    #data3 = makeSensitivityBelt(existingData3, model, 102, 100, verbose)
+    data3 = []
     existingData3 = convertToLog(existingData3)
     data3.extend(existingData3)
     gc.collect()
     data3 = list(set(data3))
+
+    pp = physicsParameters()
+    rescaledData = []
+    outFilePath = "out/TextData/sensitivityScan-HNL-model%s-rescaled.txt"%(model)
+    for j,datum in enumerate(data3):
+        if not j%100:
+            print "Rescaling point %s of %s..."%(j,len(data3))
+            gc.collect()
+        mass = 10.**datum[0]
+        coupling = 10.**datum[1]
+        pp.setNMass(mass)
+        if model == 1:
+            couplings = [coupling, pp.models[model-1][1]*coupling, pp.models[model-1][2]*coupling]
+        elif model == 2:
+            couplings = [pp.models[model-1][0]*coupling, coupling, pp.models[model-1][2]*coupling]
+        elif model == 3:
+            couplings = [pp.models[model-1][0]*coupling, pp.models[model-1][1]*coupling, coupling]
+        pp.setNCoupling(couplings)
+        pp.computeProductionWeights('e')
+        pp.computeProductionWeights('mu')
+        adjustedBRs = ( ((pp.nDs + (pp.nD+pp.nD0)*pp.w3body['e']) / pp.nTotCharm) * pp.computeNProdBR(0),
+            ((pp.nDs + (pp.nD+pp.nD0)*pp.w3body['mu']) / pp.nTotCharm) * pp.computeNProdBR(1),
+            ((pp.nDs/pp.nTotCharm)*pp.BRDsToTau) * pp.computeNProdBR(2) )
+        U2tot = sum(pp.U2)
+        rescaledNevt = (( adjustedBRs[0]*pp.U2[0]/U2tot +
+            adjustedBRs[1]*pp.U2[1]/U2tot +
+            2*adjustedBRs[2]*pp.U2[2]/U2tot ) / adjustedBRs[model-1]) * datum[2]  # majorana stuff was not taken into account in model 3!! 30/07/2014
+        if not j%100:
+            print "%s -> %s"%(datum[2],rescaledNevt)
+        #if model == 3:
+        #    rescaledNevt *= 2 # majorana stuff was not taken into account!! 30/07/2014
+        rescaledData.append( (roundToN(math.log10(mass)) ,
+        roundToN(math.log10(coupling)),
+        rescaledNevt ))
+        with open(outFilePath,'a') as ofile:
+            try:
+                ofile.write('%s \t %s \t %s\n'%(mass, coupling, roundToN(rescaledNevt)))
+            except KeyboardInterrupt:
+                pass
+
+    data3 = rescaledData
+
     data3.sort(key=lambda x: x[1])
     data3.sort(key=lambda x: x[0])
     bot3 = makeCountours(data3,2.3)
