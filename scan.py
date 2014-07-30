@@ -13,9 +13,11 @@ start = [math.log10(0.1)]*3 #GeV
 #start = [math.log10(6.e-03)]*3
 stop = [math.log10(mDs-mMu), math.log10(mDs-mMu), math.log10(mTau-mMu)]
 
-yStart = [[math.log10(5.e-06), math.log10(1.e-07)]]*3
-yStop = [[math.log10(1.e-09), math.log10(7.e-11)]]*3
-print 25*(math.log10(mTau) - math.log10(5.e-03))/(math.log10(mTau) + 1.)
+yStart = [[math.log10(5.e-06)+2, math.log10(1.e-07)+2]]*3 #model 3
+yStop = [[math.log10(1.e-09)+2, math.log10(7.e-11)+2]]*3 #model 3
+#yStart = [[math.log10(5.e-06), math.log10(1.e-07)]]*3 #model 1 & 2
+#yStop = [[math.log10(1.e-09), math.log10(7.e-11)]]*3 #model 1 & 2
+#print 25*(math.log10(mTau) - math.log10(5.e-03))/(math.log10(mTau) + 1.)
 
 slope = (-6.+9.)/(-1)
 
@@ -143,7 +145,7 @@ def readFile(filename):
 
 if __name__ == '__main__':
     verbose = True
-    model = 1
+    model = 3
     print "Scanning model %s..."%model
     existingData3 = loadDataFile(model)
     data3 = makeSensitivityBelt(existingData3, model, 102, 100, verbose)
