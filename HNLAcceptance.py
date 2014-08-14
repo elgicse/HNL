@@ -22,12 +22,8 @@ def makeDecayInVolume(hh, decayString, volume, statistic=100):
         vec.SetMagThetaPhi(momN, thetaN, 0.)
         pN.SetVect(vec)
         pN.SetE(hh.pp.energy(momN, hh.pp.MN))
-        #hh.ev.decay.readString(decayString)
-        #hh.ev.decay.setPMother(pN)
-        #pGKid1, pGKid2 = hh.ev.decay.makeDecay()
         kids = HNLDecayChain(hh, decayString, pN)
         NDecayVtx = hh.ep.makeVtxInVolume(pN, hh.pp.c*hh.pp.NLifetime, volume)
-        #inVol += int( ep.inAcceptance(NDecayVtx, pGKid1, pGKid2, volume) )
         inVol += int( hh.ep.inAcceptance(NDecayVtx, kids, volume) )
     return inVol/statistic, statistic    
 
@@ -64,7 +60,6 @@ def HNLDecayChain(hh, decayString, pN):
         pGKid3, pGKid4 = hh.ev.decay.makeDecay() # 2 gamma
         pG1, pG2 = r.TLorentzVector(pGKid3), r.TLorentzVector(pGKid4)
         kids = [pLepton, pPi, pG1, pG2] # lepton+pi+2gamma
-        #print pGKid3.Pz(), pGKid3.Px(), pGKid3.Py()
     elif decayString == 'N -> pi0 nu': # DIFFICILE DA MISURARE, RICHIEDE STUDIO BG
         hh.ev.decay.readString(decayString)
         hh.ev.decay.setPMother(pN)
@@ -80,34 +75,6 @@ def HNLDecayChain(hh, decayString, pN):
         pGKid1, pGKid2 = hh.ev.decay.makeDecay()
         kids = [pGKid1, pGKid2]   
     return kids
-
-
-#def HNLAllowedDecays(pp):
-#    m = pp.MN
-#    allowedDecays = {'N -> nu nu nu':'yes'}
-#    if m > 2.*pp.masses[pp.name2particle['e']]:
-#        allowedDecays.update({'N -> e e nu':'yes'})
-#        if m > pp.masses[pp.name2particle['e']] + pp.masses[pp.name2particle['mu']]:
-#            allowedDecays.update({'N -> e mu nu':'yes'})
-#        if m > pp.masses[pp.name2particle['pi0']]:
-#            allowedDecays.update({'N -> pi0 nu':'yes'})
-#        if m > pp.masses[pp.name2particle['pi']] + pp.masses[pp.name2particle['e']]:
-#            allowedDecays.update({'N -> pi e':'yes'})
-#            if m > 2.*pp.masses[pp.name2particle['mu']]:
-#                allowedDecays.update({'N -> mu mu nu':'yes'})
-#                if m > pp.masses[pp.name2particle['pi']] + pp.masses[pp.name2particle['mu']]:
-#                    allowedDecays.update({'N -> pi mu':'yes'})
-#                    if m > pp.masses[pp.name2particle['rho']]:
-#                        allowedDecays.update({'N -> rho nu':'yes'})
-#                        if m > pp.masses[pp.name2particle['rho']] + pp.masses[pp.name2particle['e']]:
-#                            allowedDecays.update({'N -> rho e':'yes'})
-#                            if m > pp.masses[pp.name2particle['rho']] + pp.masses[pp.name2particle['mu']]:
-#                                allowedDecays.update({'N -> rho mu':'yes'})
-#    for decay in pp.decays:
-#        if decay not in allowedDecays and decay.startswith('N'):
-#            allowedDecays.update({decay:'no'})
-#    return allowedDecays
-
 
 
 def computeNEvents(model, mass, coupling):
@@ -131,7 +98,6 @@ def computeNEvents(model, mass, coupling):
         else:
             return 0.
 
-    #model = model - 1
     if model == 1:
         couplings = [coupling, pp.models[model-1][1]*coupling, pp.models[model-1][2]*coupling]
     elif model == 2:
@@ -159,7 +125,27 @@ def computeNEvents(model, mass, coupling):
             weight1 += hh.pp.findBranchingRatio(dec)*acc1
             weight2 += hh.pp.findBranchingRatio(dec)*acc2
 
-    # Production branching ratio
+    BRprod = 0.
+    U2tot = sum(pp.U2)
+    for mod in [1,2,3]:
+        BRprod += productionBR(pp, source, mod) * pp.U2[mod-1]/U2tot
+
+    NEv = (accv1*weight1 + accv2*weight2)*2.*BRprod*hh.ep.protonFlux
+    hh.weightedPDFoutfile.Close()
+    hh.prodPDFoutfile.Close()
+    hh.sourceFile.Close()
+    outFilePath = "out/TextData/sensitivityScan-HNL-model%s.txt"%(model)
+    with open(outFilePath,"a") as ofile:
+        try:
+            ofile.write('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s\n'%(mass, coupling, hh.pp.computeNProdBR(model-1),
+                accv1, accv2, weight1, weight2, NEv))
+        except KeyboardInterrupt:
+            pass
+    return NEv
+
+
+def productionBR(pp, source, model):
+    leptons = [None, 'e', 'mu', 'tau']
     BR = 0.
     if source == 'charm':
         BR0 = pp.Xcc
@@ -188,28 +174,7 @@ def computeNEvents(model, mass, coupling):
             BR += BR0*(pp.nB0/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'B0', leptons[model])
         if pp.MN < (pp.masses['Bs'] - pp.masses[leptons[model]] - pp.masses['Ds']):
             BR += BR0*(pp.nBs/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'Bs', leptons[model])
-
-
-
-    ## Production BR adjustments
-    #if (model) == 3:
-    #    adj = (hh.pp.nDs/hh.pp.nTotCharm)*hh.pp.BRDsToTau
-    #else:
-    #    adj = (hh.pp.nDs + (hh.pp.nD+hh.pp.nD0)*hh.pp.w3body[hh.lepton]) / hh.pp.nTotCharm
-
-    #NEv = (accv1*weight1 + accv2*weight2)*2.*hh.pp.Xcc*hh.pp.computeNProdBR(model-1)*adj*hh.ep.protonFlux
-    NEv = (accv1*weight1 + accv2*weight2)*2.*BR*hh.ep.protonFlux
-    hh.weightedPDFoutfile.Close()
-    hh.prodPDFoutfile.Close()
-    hh.sourceFile.Close()
-    outFilePath = "out/TextData/sensitivityScan-HNL-model%s.txt"%(model)
-    with open(outFilePath,"a") as ofile:
-        try:
-            ofile.write('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s\n'%(mass, coupling, hh.pp.computeNProdBR(model-1),
-                accv1, accv2, weight1, weight2, NEv))
-        except KeyboardInterrupt:
-            pass
-    return NEv
+    return BR
 
 
 
