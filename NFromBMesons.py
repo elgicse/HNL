@@ -10,16 +10,18 @@ def BR2Body(pp, meson, lepton):
         MH = pp.masses[pp.name2particle['B']]
         V = pp.CKM.Vub
         tau = pp.tauB
+        f = pp.fB
     elif meson == 'Ds':
         MH = pp.masses[pp.name2particle['Ds']]
         V = pp.CKM.Vcs
         tau = pp.tauDs
+        f = pp.fDs
     else:
         print 'BR2Body: select B or Ds!'
         sys.exit(-1)
     alpha = indx[lepton]
     phsp = pp.phsp2body(MH, pp.MN, pp.masses[pp.name2particle[lepton]])
-    const = (tau/pp.hGeV) * pp.GF**2. * pp.fB**2. * MH * pp.MN**2. * pp.U2[alpha] * V**2. / (8. * math.pi)
+    const = (tau/pp.hGeV) * pp.GF**2. * f**2. * MH * pp.MN**2. * pp.U2[alpha] * V**2. / (8. * math.pi)
     br = phsp*const*2. #majorana -> x2
     return br
 

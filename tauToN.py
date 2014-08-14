@@ -66,14 +66,14 @@ def brTauToPiN(pp):
         return 0.
     const = (pp.tauTau/pp.hGeV) * pp.U2[2] * pp.GF**2. * pp.CKM.Vud**2. * pp.fpi**2. * pp.masses[pp.name2particle['tau']]**3. * (1./(16.*math.pi))
     ps = phsp2bodyTauToN(pp)
-    return const*ps
+    return const*ps*2. #majorana
 
 def brTauToNuEllN(pp, lepton):
     if pp.MN >= (pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle[lepton]]):
         return 0.
     const = (pp.tauTau/pp.hGeV) * pp.U2[2] * pp.GF**2. * pp.masses[pp.name2particle['tau']]**2. * (1./(4.*math.pi**3.))
     ps = integrate3bodyTauToN(pp, lepton)
-    return const*ps
+    return const*ps*2. #majorana
 
 
 

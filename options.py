@@ -27,10 +27,11 @@ class physicsParameters():
         self.nD = 5635
         self.nD0 = 11465
         self.nDs = 1553
+        self.nTotCharm = self.nD + self.nD0 + self.nDs
         self.nB0 = 1027
         self.nB = 1088
         self.nBs = 173
-        self.nTotCharm = self.nD + self.nD0 + self.nDs
+        self.nTotBeauty = self.nB + self.nB0 + self.nBs
         #############################
         self.MeV = 1. #everything in GeV for now
         self.modelsSq = [(52.,1.,1.), (1.,16.,3.8), (0.061,1.,4.3)]
@@ -61,7 +62,8 @@ class physicsParameters():
                         'Ds -> nu tau',
                         'B -> e N', 'B -> mu N', 'B -> tau N',
                         'tau -> mu N nu', 'tau -> e N nu',
-                        'D -> K mu N', 'D -> K e N',
+                        'D -> K0 mu N', 'D -> K0 e N',
+                        'D0 -> K mu N', 'D0 -> K e N',
                         'B -> D0 e N', 'B -> D0 mu N', 'B -> D0 tau N',
                         'B0 -> D e N', 'B0 -> D mu N', 'B0 -> D tau N',
                         'Bs -> Ds e N', 'Bs -> Ds mu N', 'Bs -> Ds tau N']
@@ -586,8 +588,11 @@ class experimentParams():
         gamma = momentum.Gamma()
         Direction = momentum.Vect().Unit()
         costheta = math.fabs(momentum.CosTheta())
-        dxdz = momentum.Px()/momentum.Pz()
-        dydz = momentum.Py()/momentum.Pz()
+        if momentum.Pz():
+            dxdz = momentum.Px()/momentum.Pz()
+            dydz = momentum.Py()/momentum.Pz()
+        else:
+            dxdz, dydz = 0., 0.
         Origin = r.TVector3( vol[0]*dxdz, vol[0]*dydz, vol[0] )
         self.LTfun.SetParameter(0, 1./(gamma*ct))
         maxlength = 40.*costheta

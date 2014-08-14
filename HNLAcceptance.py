@@ -112,13 +112,10 @@ def HNLDecayChain(hh, decayString, pN):
 
 def computeNEvents(model, mass, coupling):
     """ Choose model 1, 2 or 3 """
-    #if (source is not 'charm') and (source is not 'beauty'):
-    #    print 'computeNEvents: please select neutrino source (charm or beauty). Aborting.'
-    #    sys.exit(-1)
     pp = physicsParameters()
     pp.setNMass(mass)
-
     # Check kinematics
+    leptons = [None, 'e', 'mu', 'tau']
     if model == 3:
         if pp.MN < (pp.masses['tau'] - pp.masses['e']):
             source = 'charm'
@@ -127,7 +124,6 @@ def computeNEvents(model, mass, coupling):
         else:
             return 0.
     if model == 1 or model == 2:
-        leptons = [None, 'e', 'mu']
         if pp.MN < (pp.masses['Ds'] - pp.masses[leptons[model]]):
             source = 'charm'
         elif pp.MN < (pp.masses['B'] - pp.masses[leptons[model]]):
@@ -135,51 +131,81 @@ def computeNEvents(model, mass, coupling):
         else:
             return 0.
 
-    #ml = 0.
-    #if model == 1:
-    #    ml = pp.masses[pp.name2particle['e']]
-    #elif model == 2:
-    #    ml = pp.masses[pp.name2particle['mu']]
-    #if pp.MN > pp.masses[pp.name2particle['Ds']] - ml:
-    #    return 0.
-    #if (model == 3) and (pp.MN > pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle['mu']]):
-    #    return 0.
-    model = model - 1
-    if model == 0:
-        couplings = [coupling, pp.models[model][1]*coupling, pp.models[model][2]*coupling]
-    elif model == 1:
-        couplings = [pp.models[model][0]*coupling, coupling, pp.models[model][2]*coupling]
+    #model = model - 1
+    if model == 1:
+        couplings = [coupling, pp.models[model-1][1]*coupling, pp.models[model-1][2]*coupling]
     elif model == 2:
-        couplings = [pp.models[model][0]*coupling, pp.models[model][1]*coupling, coupling]
-    #print couplings
+        couplings = [pp.models[model-1][0]*coupling, coupling, pp.models[model-1][2]*coupling]
+    elif model == 3:
+        couplings = [pp.models[model-1][0]*coupling, pp.models[model-1][1]*coupling, coupling]
     pp.setNCoupling(couplings)
     ep = experimentParams(pp, 'SHIP')
-    hh = HistoHandler(pp, ep, source, model+1)
+    hh = HistoHandler(pp, ep, source, model)
     hh.makeProductionPDF()
     accv1, accv2 = hh.scaleProductionPDF(couplings)
-    decList = hh.pp.HNLAllowedDecays()#HNLAllowedDecays(hh.pp)
+    decList = hh.pp.HNLAllowedDecays()
     weight1 = 0.
     weight2 = 0.
     for dec in decList:
         if decList[dec] == 'yes' and dec != 'N -> pi0 nu' and dec != 'N -> nu nu nu':
-            acc1, tot1 = makeDecayInVolume(hh, dec, 1)
-            acc2, tot2 = makeDecayInVolume(hh, dec, 2)
+            if accv1:
+                acc1, tot1 = makeDecayInVolume(hh, dec, 1)
+            else:
+                acc1 = 0.
+            if accv2:
+                acc2, tot2 = makeDecayInVolume(hh, dec, 2)
+            else:
+                acc2 = 0.
             weight1 += hh.pp.findBranchingRatio(dec)*acc1
             weight2 += hh.pp.findBranchingRatio(dec)*acc2
-            #print dec, weight1, weight2
-    # Production BR adjustments
-    if (model+1) == 3:
-        adj = (hh.pp.nDs/hh.pp.nTotCharm)*hh.pp.BRDsToTau
-    else:
-        adj = (hh.pp.nDs + (hh.pp.nD+hh.pp.nD0)*hh.pp.w3body[hh.lepton]) / hh.pp.nTotCharm
-    NEv = (accv1*weight1 + accv2*weight2)*2.*hh.pp.Xcc*hh.pp.computeNProdBR(model)*adj*hh.ep.protonFlux
+
+    # Production branching ratio
+    BR = 0.
+    if source == 'charm':
+        BR0 = pp.Xcc
+        if model == 3:
+            BR0 *= (pp.nDs/pp.nTotCharm)*pp.BRDsToTau
+            if pp.MN < (pp.masses['tau'] - pp.masses['e']):
+                BR += BR0*tauToN.brTauToNuEllN(pp,'e')
+            if pp.MN < (pp.masses['tau'] - pp.masses['mu']):
+                BR += BR0*tauToN.brTauToNuEllN(pp,'mu')
+            if pp.MN < (pp.masses['tau'] - pp.masses['pi']):
+                BR += BR0*tauToN.brTauToPiN(pp)
+        else:
+            if pp.MN < (pp.masses['Ds']-pp.masses[leptons[model]]):
+                BR += BR0*(pp.nDs/pp.nTotCharm) * NFromBMesons.BR2Body(pp,'Ds',leptons[model])
+            if pp.MN < (pp.masses['D0']-pp.masses['K']-pp.masses[leptons[model]]):
+                BR += BR0*(pp.nD0/pp.nTotCharm) * NFromBMesons.BR3Body(pp,'D0',leptons[model])
+            if pp.MN < (pp.masses['D']-pp.masses['K0']-pp.masses[leptons[model]]):
+                BR += BR0*(pp.nD/pp.nTotCharm) * NFromBMesons.BR3Body(pp,'D',leptons[model])
+    elif source == 'beauty':
+        BR0 = pp.Xbb
+        if pp.MN < (pp.masses['B'] - pp.masses[leptons[model]]):
+            BR += BR0*(pp.nB/pp.nTotBeauty) * NFromBMesons.BR2Body(pp, 'B', leptons[model])
+        if pp.MN < (pp.masses['B'] - pp.masses[leptons[model]] - pp.masses['D0']):
+            BR += BR0*(pp.nB/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'B', leptons[model])
+        if pp.MN < (pp.masses['B0'] - pp.masses[leptons[model]] - pp.masses['D']):
+            BR += BR0*(pp.nB0/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'B0', leptons[model])
+        if pp.MN < (pp.masses['Bs'] - pp.masses[leptons[model]] - pp.masses['Ds']):
+            BR += BR0*(pp.nBs/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'Bs', leptons[model])
+
+
+
+    ## Production BR adjustments
+    #if (model) == 3:
+    #    adj = (hh.pp.nDs/hh.pp.nTotCharm)*hh.pp.BRDsToTau
+    #else:
+    #    adj = (hh.pp.nDs + (hh.pp.nD+hh.pp.nD0)*hh.pp.w3body[hh.lepton]) / hh.pp.nTotCharm
+
+    #NEv = (accv1*weight1 + accv2*weight2)*2.*hh.pp.Xcc*hh.pp.computeNProdBR(model-1)*adj*hh.ep.protonFlux
+    NEv = (accv1*weight1 + accv2*weight2)*2.*BR*hh.ep.protonFlux
     hh.weightedPDFoutfile.Close()
     hh.prodPDFoutfile.Close()
-    hh.charmFile.Close()
-    outFilePath = "out/TextData/sensitivityScan-HNL-model%s.txt"%(model+1)
+    hh.sourceFile.Close()
+    outFilePath = "out/TextData/sensitivityScan-HNL-model%s.txt"%(model)
     with open(outFilePath,"a") as ofile:
         try:
-            ofile.write('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s\n'%(mass, coupling, hh.pp.computeNProdBR(model),
+            ofile.write('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s\n'%(mass, coupling, hh.pp.computeNProdBR(model-1),
                 accv1, accv2, weight1, weight2, NEv))
         except KeyboardInterrupt:
             pass
