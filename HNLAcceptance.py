@@ -110,11 +110,13 @@ def HNLDecayChain(hh, decayString, pN):
 
 
 
-def computeNEvents(model, mass, coupling):
+def computeNEvents(source, model, mass, coupling):
     """ Choose model 1, 2 or 3 """
+    if (source is not 'charm') and (source is not 'beauty'):
+        print 'computeNEvents: please select neutrino source (charm or beauty). Aborting.'
+        sys.exit(-1)
     pp = physicsParameters()
     pp.setNMass(mass)
-
     # Check kinematics
     ml = 0.
     if model == 1:
@@ -135,7 +137,7 @@ def computeNEvents(model, mass, coupling):
     #print couplings
     pp.setNCoupling(couplings)
     ep = experimentParams(pp, 'SHIP')
-    hh = HistoHandler(pp, ep, model+1)
+    hh = HistoHandler(pp, ep, source, model+1)
     hh.makeProductionPDF()
     accv1, accv2 = hh.scaleProductionPDF(couplings)
     decList = hh.pp.HNLAllowedDecays()#HNLAllowedDecays(hh.pp)

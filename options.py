@@ -20,11 +20,15 @@ class physicsParameters():
     """ Set the physics parameters here """
     def __init__(self):
         self.charmSourceFile = 'CharmFixTarget.root'
+        self.beautySourceFile = 'BeautyFixTarget.root'
         self.charmTreeName = 'newTree'
         # Contents of the source file
         self.nD = 5635
         self.nD0 = 11465
         self.nDs = 1553
+        self.nB0 = 1027
+        self.nB = 1088
+        self.nBs = 173
         self.nTotCharm = self.nD + self.nD0 + self.nDs
         #############################
         self.MeV = 1. #everything in GeV for now
@@ -52,12 +56,14 @@ class physicsParameters():
                         'rho -> pi pi0',
                         'pi0 -> gamma gamma',
                         'Ds -> mu N',
-                        'tau -> mu N nu',
-                        'tau -> e N nu',
                         'Ds -> nu tau',
-                        'D -> K mu N',
-                        'D -> K e N',
-                        'Ds -> e N']
+                        'Ds -> e N',
+                        'B -> e N', 'B -> mu N',
+                        'tau -> mu N nu', 'tau -> e N nu',
+                        'D -> K mu N', 'D -> K e N',
+                        'B -> D0 e N', 'B -> D0 mu N',
+                        'B0 -> D e N', 'B0 -> D mu N',
+                        'Bs -> Ds e N', 'Bs -> Ds mu N']
         self.masses = {'mu':0.10565*self.MeV,
                     'e':0.000511*self.MeV,
                     'tau':1.7768*self.MeV,
@@ -69,6 +75,8 @@ class physicsParameters():
                     'K':0.493677*self.MeV,
                     'Ds':1.9685*self.MeV,
                     'D':1.86962*self.MeV,
+                    'D0':1.865,
+                    'Dst':2.007,
                     'p':0.938*self.MeV,
                     'rho':0.775*self.MeV,
                     'nu':0.*self.MeV,
@@ -80,7 +88,12 @@ class physicsParameters():
                     'bottom':4.18,
                     'top':173.,
                     'W':80.39,
-                    'Z':91.19}
+                    'Z':91.19,
+                    'B':5.279,
+                    'Bs':5.367,
+                    'B0':5.280,
+                    'Bst':5.325,
+                    'Bsst':5.415}
         self.name2particle = {'pi':'pi','pi1':'pi', 'pi2':'pi','piTag':'pi',
                             'pi0':'pi0',
                             'mu':'mu','muTag':'mu',
@@ -94,6 +107,7 @@ class physicsParameters():
                             'N':'N',
                             'D':'D',
                             'Ds':'Ds',
+                            'Dst':'Dst',
                             'p':'p',
                             'rho':'rho',
                             'nu':'nu',
@@ -105,7 +119,10 @@ class physicsParameters():
                             'top':'top',
                             'bottom':'bottom',
                             'W':'W',
-                            'Z':'Z', 'Z0':'Z'}
+                            'Z':'Z', 'Z0':'Z',
+                            'B':'B',
+                            'Bs':'Bs',
+                            'B0':'B0'}
         self.particle2id = {'D':411,
                             'D0':421, # NOTA: ATTENZIONE QUESTO SAREBBE D0
                             'Ds':431}
@@ -117,7 +134,14 @@ class physicsParameters():
         self.s2thetaw = 0.23126 # square sine of the Weinberg angle
         self.fpi = 0.1307 # from http://pdg.lbl.gov/2006/reviews/decaycons_s808.pdf
         self.fD = 0.2226
+        self.fDs = 0.2801
+        self.fB = 0.190 # from gorbunov, shaposhnikov
+        self.fBs = 0.230 # from gorbunov, shaposhnikov
+        self.tauB = 1.64e-12
+        self.tauB0 = 1.52e-12
+        self.tauBs = 1.52e-12
         self.tauD = 1.e-12 #sec
+        self.tauDs = 0.5e-12
         self.tauTau = 2.91e-13 #sec
         self.decayConstant = {'pi':0.1307, #GeV
                             'pi0':0.130, #GeV
@@ -143,32 +167,59 @@ class physicsParameters():
                         (5,2):self.CKM.Vts**2., (2,5):self.CKM.Vts**2.,
                         (5,4):self.CKM.Vtb**2., (4,5):self.CKM.Vtb**2.}
         self.Xcc = 0.45e-03
+        self.Xbb = 4.52e-8
         self.BRDsToTau = 0.0543
         #self.w2body = {}
         self.w3body = {}
         #self.lifetimeFun = interpNLifetime('NLifetime.dat')
 
-    def fplus(self, q2):
-        val = ((2.007)**2/((2.007)**2-q2))*0.727
+    def fplus(self, family, q2):
+        if family == 'D':
+            Mv = self.masses['Dst']
+            f0 = 0.727
+        elif family == 'B':
+            Mv = self.masses['Bst']
+            f0 = 0.4
+        elif family == 'Bs':
+            Mv = self.masses['Bsst']
+            f0 = 0.4
+        else:
+            print 'fplus: unknown meson family!'
+            sys.exit(-1)
+        val = (Mv**2/(Mv**2-q2))*f0
         return val
-    def fzero(self, q2):
-        val = ((1.870)**2/((1.870)**2-q2))*0.727
+    def fzero(self, family, q2):
+        if family == 'D':
+            Ms = self.masses['D']
+            f0 = 0.727
+        elif family == 'B':
+            Ms = self.masses['B']
+            f0 = 0.4
+        elif family == 'Bs':
+            Ms = self.masses['Bs']
+            f0 = 0.4
+        else:
+            print 'fzero: unknown meson family!'
+            sys.exit(-1)
+        val = (Ms**2/(Ms**2-q2))*f0
         return val
-    def fminus(self, q2, mH, mh):
-        val = (self.fzero(q2)-self.fplus(q2))*(mH**2-mh**2)/q2
+    def fminus(self, family, q2, mH, mh):
+        val = (self.fzero(family, q2)-self.fplus(family, q2))*(mH**2-mh**2)/q2
         return val
-    def PhaseSpace3Body(self, q2, EN, mH, mh, mN, ml):
-        fp = self.fplus(q2)
-        fm = self.fminus(q2, mH, mh)
+    def PhaseSpace3Body(self, family, q2, EN, mH, mh, mN, ml):
+        fp = self.fplus(family, q2)
+        fm = self.fminus(family, q2, mH, mh)
         PhaseSpace = (fm**2)*(q2*(mN**2+ml**2)-(mN**2-ml**2)**2)+2.*fp*fm*((mN**2)*(2*mH**2-2*mh**2-4*EN*mH-ml**2+mN**2+q2)+(ml**2)*(4.*EN*mH+ml**2-mN**2-q2))
         PhaseSpace += (fp**2)*((4.*EN*mH+ml**2-mN**2-q2)*(2.*mH**2-2.*mh**2-4.*EN*mH-ml**2+mN**2+q2)-(2.*mH**2+2.*mh**2-q2)*(q2-mN**2-ml**2))
         return PhaseSpace
     def phsp2body(self, mH, mN, ml):
+        if mN >= (mH-ml):
+            return 0.
         p1 = 1. - mN**2./mH**2. + 2.*(ml**2./mH**2.) + (ml**2./mN**2.)*(1. - (ml**2./mH**2.))
         p2 = ( 1. + (mN**2./mH**2.) - (ml**2./mH**2.) )**2. - 4.*(mN**2./mH**2.)
         p3 = math.sqrt( p2 )
         return p1*p3
-    def Integrate3Body(self, mH, mh, mN, ml, nToys=1000):
+    def Integrate3Body(self, family, mH, mh, mN, ml, nToys=1000):
         #### Setting up the parameters for generation
         W = r.TLorentzVector(0., 0., 0., mH)
         masses = array('d', [mh, mN, ml])
@@ -177,7 +228,7 @@ class physicsParameters():
         Nq2 = 20 
         NEN = 20
         ENMax = (mH-mh)
-        ENMax =  r.TMath.Sqrt(((ENMax**2-ml**2-mN**2)/2.)**2+mN**2) # converte massa max ad energia max
+        ENMax = r.TMath.Sqrt(((ENMax**2-ml**2-mN**2)/2.)**2+mN**2) # converte massa max ad energia max
         hist = r.TH2F("hist", "", Nq2, (ml+mN)**2, (mH-mh)**2, NEN, mN, ENMax)
         ###### Integral
         Integral = 0.
@@ -186,15 +237,15 @@ class physicsParameters():
             event.Generate()
             #### Getting momentum of the daughters
             ph = event.GetDecay(0)
-            pN    = event.GetDecay(1)
-            pl    = event.GetDecay(2)
+            pN = event.GetDecay(1)
+            pl = event.GetDecay(2)
             #### Computing the parameters to compute the phase space
             q = pl+pN
             q2 = q.M2()
             EN = pN.E()
             iBin = hist.Fill(q2, EN)
             if hist.GetBinContent(iBin)==1.:
-                val = self.PhaseSpace3Body(q2, EN, mH, mh, mN, ml)
+                val = self.PhaseSpace3Body(family, q2, EN, mH, mh, mN, ml)
                 Integral+=val*hist.GetXaxis().GetBinWidth(1)*hist.GetYaxis().GetBinWidth(1)
         hist.Delete()    
         return Integral
@@ -206,8 +257,9 @@ class physicsParameters():
             self.w3body[lepton] = 0.
             #self.w2body[lepton] = 1.
         else:
-            wk = (1./self.MN**2.) * (1./self.fD**2.) * (1./self.masses[self.name2particle['D']]**2.) * (1./self.masses[self.name2particle['Ds']]) * (1./(8.*math.pi**2.))
-            wk *= self.Integrate3Body(self.masses[self.name2particle['D']], self.masses[self.name2particle['K']], self.MN, self.masses[self.name2particle[lepton]], nToys=300)
+            wk = (1./self.MN**2.) * (1./self.fDs**2.) * (1./self.masses[self.name2particle['D']]**2.) * (1./self.masses[self.name2particle['Ds']]) * (1./(8.*math.pi**2.))
+            wk *= (self.tauD/self.tauDs) #* (self.CKM.Vcd**2./self.CKM.Vcs**2.) #no, e' lo stesso Vcs!!!
+            wk *= self.Integrate3Body('D',self.masses[self.name2particle['D']], self.masses[self.name2particle['K']], self.MN, self.masses[self.name2particle[lepton]], nToys=300)
             wk = wk / self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[lepton]])
             if wk > 1.:
                 wk = 1.
@@ -233,7 +285,8 @@ class physicsParameters():
         #self.BR = alpha_BR*self.U2[alpha]
         if alpha<2: #prod from Ue, Umu
             l = ['e','mu','tau']
-            alpha_BR = (self.tauD / self.hGeV) * (self.GF**2. * self.fD**2. * self.masses['D']**2. * self.CKM.Vcd**2.) / (8. * math.pi)
+            #alpha_BR = (self.tauD / self.hGeV) * (self.GF**2. * self.fD**2. * self.masses['D']**2. * self.CKM.Vcd**2.) / (8. * math.pi)
+            alpha_BR = (self.tauDs / self.hGeV) * (self.GF**2. * self.fDs**2. * self.masses['Ds'] * self.CKM.Vcs**2.) / (8. * math.pi)
             ps = self.phsp2body(self.masses[self.name2particle['Ds']], self.MN, self.masses[self.name2particle[l[alpha]]])
             self.BR = ps * alpha_BR * self.U2[alpha] * self.MN**2. * 2. #Majorana neutrinos --> x2!
         elif alpha==2: #prod from Utau
@@ -510,12 +563,14 @@ class experimentParams():
             self.v2ThetaMax = self.secondVolume[2]/self.secondVolume[0]
         elif name == "TLEP" or name == "tlep" or name == "Tlep":
             self.nZ = 1.e12
+            self.nW = 1.e11
             self.efficiency = 1.
             self.minSVdistance = 1.e-3 # 1 mm (maybe increase to 5 mm)
             self.Rmin = 1.e-3
             self.Rmax = 1. # 1 m (maybe increase?)
             #self.NGamma = pp.masses[pp.name2particle['Z']]/2.
             self.BRZnunu = 0.08
+            self.BRWlnu = 0.108
         else:
             print "experimentParams ERROR: please provide the name of the experiment!"
     def makeVtxInVolume(self, momentum, ct, volume):
@@ -538,10 +593,13 @@ class experimentParams():
         EndVertex = r.TVector3(Direction[0]*DL, Direction[1]*DL, Direction[2]*DL)
         EndVertex = Origin + EndVertex
         return EndVertex
-    def TLEPacceptance(self,pp):
+    def TLEPacceptance(self,pp,boson):
+        if (boson is not 'Z') and (boson is not 'W'):
+            print 'TLEPacceptance: please define the source of neutrinos (Z or W)!'
+            sys.exit(-1)
         lt = pp.computeNLifetime()
-        mz = pp.masses[pp.name2particle['Z']]
-        gamma = (mz/(2.*pp.MN)) + (pp.MN/(2.*mz))
+        mb = pp.masses[pp.name2particle[boson]]
+        gamma = (mb/(2.*pp.MN)) + (pp.MN/(2.*mb)) #this neglects ml in W->lN
         cgammatau = lt*gamma*pp.c
         esp1 = (-1.)*self.Rmin/cgammatau
         esp2 = (-1.)*self.Rmax/cgammatau
@@ -655,7 +713,7 @@ class decayNBody():
         self.kid2 = self.particles[2]
         self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2]])
         self.nbody = 2
-        if self.name in (self.pp.decays[:7]+['tau -> mu N nu', 'tau -> e N nu', 'D -> K mu N', 'D -> K e N']):
+        if self.name in (self.pp.decays[:7]+self.pp.decays[21:]):
             self.nbody = 3
             self.kid3 = self.particles[3]
             self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2], self.pp.masses[self.kid3]])

@@ -1,3 +1,5 @@
+# Usage: ipython -i CMS.py
+# bot, top, shipfile, labels, leg = sensitivityScanCMS(2, 0.1, 1., 1.e11, 220, 400)
 from __future__ import division
 import sys
 import timeit
@@ -11,11 +13,9 @@ cSaver = [] # Keep canvases open
 
 # Sensitivity scan mass range
 start = [math.log10(0.1)]*3 #GeV
-#stop = [math.log10(85.)]*3 #GeV
-stop = [math.log10(63.)]*3 #GeV
-#stop = [math.log10(42.)]*3 #GeV
+stop = [math.log10(43.)]*3 #GeV
 # Sensitivity scan U^2 range
-yStop = [math.log10(1.e-5)]*3
+yStop = [math.log10(1.e-2)]*3
 yStart = [math.log10(1.e-13)]*3
 
 #a = math.log10(0.1) # works for 10^12 Z
@@ -46,12 +46,10 @@ def inTopHalf(p1,p2,datum):
     return False
 
 def make2Countours(data,m):
-    #p1 = (math.log10(18.), -6.) #works for 10^12 Z
-    p1 = (math.log10(6.), -6.) #works for 10^12 Z
-    #p1 = (math.log10(20.), math.log10(1.e-6)) # works for 10^13 Z
-    #p2 = (math.log10(70.), math.log10(1.e-10)) # works for 10^12 Z
-    p2 = (math.log10(30.), math.log10(2.e-10)) # works for 10^12 Z
-    #p2 = (math.log10(50.), math.log10(1.e-8)) # works for 10^13 Z
+    p1 = (math.log10(3.), -3.) #works for 1cm
+    p2 = (math.log10(30.5), math.log10(1.5e-9)) # works for 1cm
+    #p1 = (math.log10(2.), math.log10(1.e-3)) # works for 10cm
+    #p2 = (math.log10(10.), math.log10(1.e-7)) # works for 10cm
     xAxis = []
     for datum in data:
         xAxis.append(datum[0])
@@ -99,17 +97,17 @@ def closestCut(data,m): # Find the point of the parameter space where N(evts) is
 def BAU(m,pp):
     return 2.e-6*(1/m**2.)*((1.-(m**2./pp.masses[pp.name2particle['W']]**2.))**2.)
 
-def makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nZ, verbose=0):
+def makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nW, verbose=0):
     points = [(x,y) for x in np.linspace(start[model-1], stop[model-1], ndivx) for y in np.linspace(yStart[model-1], yStop[model-1], ndivy)]# if inBeltSegments((x,y))]
     data = []
     pp = physicsParameters()
     ep = experimentParams(pp, 'TLEP')
     ep.Rmin = Rmin
     ep.Rmax = Rmax
-    ep.nZ = nZ
+    ep.nW = nW
     # Next two lines are useless. It is faster if you recompute the data each time.
     print 'Loaded %s previous data points.'%len(existingData)
-    outFilePath = "out/TextData/sensitivityScan-HNLatTLEP-model%s-%s-%s-%s.txt"%(model,ep.Rmin,ep.Rmax,ep.nZ)
+    outFilePath = "out/TextData/sensitivityScan-HNLatTLEP-model%s-%s-%s-%s.txt"%(model,ep.Rmin,ep.Rmax,ep.nW)
     tic = timeit.default_timer()
     for i,point in enumerate(points):
         mass = roundToN( pow(10.,point[0]),3 )
@@ -142,12 +140,12 @@ def computeNEventsTLEP(pp, ep, model, mass, coupling):
     pp.setNCoupling(couplings)
     decList = pp.HNLAllowedDecays()
     DetectableFraction = pp.findBranchingRatio('N -> TLEP visible') #(2l + nu) and (2jet + l)
-    acc = ep.TLEPacceptance(pp,'Z')
-    NEv = ep.BRZnunu * pp.factors[model] * 2 * ep.nZ * pp.U2[model] * acc * DetectableFraction # pp.factors scales U2_dom to U2_tot
+    acc = ep.TLEPacceptance(pp,'W')
+    NEv = ep.BRWlnu * pp.factors[model] * 2 * ep.nW * pp.U2[model] * acc * DetectableFraction # pp.factors scales U2_dom to U2_tot
     return NEv
 
-def loadDataFileTLEP(model, Rmin, Rmax, nZ):
-    filepath = "out/TextData/sensitivityScan-HNLatTLEP-model%s-%s-%s-%s.txt"%(model,Rmin,Rmax,nZ)
+def loadDataFileTLEP(model, Rmin, Rmax, nW):
+    filepath = "out/TextData/sensitivityScan-HNLatTLEP-model%s-%s-%s-%s.txt"%(model,Rmin,Rmax,nW)
     if not os.path.isfile(filepath):
         return []
     data = []
@@ -160,10 +158,10 @@ def loadDataFileTLEP(model, Rmin, Rmax, nZ):
     return data
 
 #if __name__ == '__main__':
-def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy=400):
+def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nW=1.e12, ndivx=200, ndivy=400):
     verbose = True
-    existingData = []#loadDataFileTLEP(model, Rmin, Rmax, nZ)
-    data = makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nZ, verbose)
+    existingData = []#loadDataFileTLEP(model, Rmin, Rmax, nW)
+    data = makeSensitivityTLEP(existingData, model, ndivx, ndivy, Rmin, Rmax, nW, verbose)
     #existingData = convertToLog(existingData)
     #data.extend(existingData)
     gc.collect()
@@ -239,7 +237,7 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     r.gStyle.SetPadLeftMargin(0.10);
     c1 = r.TCanvas('c1','c1',852,380)
     cSaver.append(c1)
-    mgr = r.TMultiGraph('mgr_%s_%s'%(h,nZ),'mgr_%s_%s'%(h,nZ))
+    mgr = r.TMultiGraph('mgr_%s_%s'%(h,nW),'mgr_%s_%s'%(h,nW))
     mgr.Add(grBauLower)
     mgr.Add(grbbn)
     mgr.Add(grBauUpper)
@@ -267,13 +265,13 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     mgr.GetXaxis().SetLabelSize(0.05)
     mgr.GetXaxis().SetLabelOffset(-0.004)
     mgr.GetYaxis().SetLabelSize(0.05)
-    leg = r.TLegend(0.114,0.148,0.316,0.332)
-    if nZ > 1.e12:
-        leg = r.TLegend(0.114,0.148,0.316,0.332)
+    leg = r.TLegend(0.114,0.148,0.330,0.332)
+    if nW > 1.e12:
+        leg = r.TLegend(0.114,0.148,0.330,0.332)
     leg.SetFillColor(r.kWhite)
     leg.AddEntry(grShip,'SHiP','lp')
-    if nZ <= 1.e12:
-        leg.AddEntry(grRaw,'TLEP 10^{12} Z^{0}','lp')
+    if nW <= 1.e12:
+        leg.AddEntry(grRaw,'CMS 10^{11} W','lp')
     else:
         leg.AddEntry(grRaw,'TLEP 10^{13} Z^{0}','lp')
     leg.SetTextSize(0.06)
@@ -291,12 +289,12 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     info = r.TLatex()
     info.SetTextSize(0.06)
     info.SetTextColor(r.kOrange-3)
-    info.DrawLatexNDC(0.48, 0.45, 'r_{min}=10cm')
-    info.DrawLatexNDC(0.48, 0.37, 'r_{max}=5m')
-    #if nZ <= 1.e12:
+    info.DrawLatexNDC(0.48, 0.45, 'r_{min}=1cm')
+    info.DrawLatexNDC(0.48, 0.37, 'r_{max}=1m')
+    #if nW <= 1.e12:
     #    info.DrawLatexNDC(0.48, 0.45, 'r_{min}=1mm')
     #    info.DrawLatexNDC(0.48, 0.37, 'r_{max}=1m')
-    #if nZ > 1.e12:
+    #if nW > 1.e12:
     #    info.DrawLatexNDC(0.68, 0.45, 'r_{min}=100#mum')
     #    info.DrawLatexNDC(0.68, 0.37, 'r_{max}=5m')
     c1.SetGrid()
@@ -306,7 +304,7 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
 
     # Save everything in a rootfile
     # Depends: folder out/plots/perNicola
-    filecontuttodentro = r.TFile('out/plots/perNicola/model%s_%s_%sZ_%s_%s.root'%(model,h,nZ,Rmin,Rmax),'recreate')
+    filecontuttodentro = r.TFile('out/plots/perNicola/CMS-model%s_%s_%sZ_%s_%s.root'%(model,h,nW,Rmin,Rmax),'recreate')
     mgr.Write()
     c1.Write()
     grShip.Write()
@@ -321,14 +319,16 @@ def sensitivityScanTLEP(model=2, Rmin=1.e-3, Rmax=1., nZ=1.e12, ndivx=200, ndivy
     return mgr, bot, top, grShipFile, labels, leg
 
 
+sensitivityScanCMS = sensitivityScanTLEP
+
 # Merge graph for 10^12 and 10^13 Z0 @ TLEP
 # (For now only normal hierarchy)
 # Depends: plots in out/plots/perNicola
 # generated by the above function
 def merge1213nh():
-    f13 = r.TFile('out/plots/perNicola/model1_inverted_1e+13Z.root','read')
-    f12 = r.TFile('out/plots/perNicola/model1_inverted_1e+12Z.root','read')
-    mgr = f12.Get('mgr_inverted_1e+12')
+    f13 = r.TFile('out/plots/perNicola/CMS-model2_normal_20000000000.0Z_0.01_1.0.root','read')
+    f12 = r.TFile('out/plots/perNicola/CMS-model2_normal_20000000000.0Z_0.1_1.0.root','read')
+    mgr = f12.Get('mgr_normal_20000000000.0')
     gr13 = r.TGraph(f13.Get('TLEP'))
     gr13.SetLineStyle(9)
     mgr.Add(gr13)
@@ -350,10 +350,10 @@ def merge1213nh():
     mgr.GetYaxis().SetTitleOffset(1.05)
     mgr.GetYaxis().SetRangeUser(1.e-12,1.3e-6)
     mgr.GetXaxis().SetTitleOffset(1.00)
-    leg = r.TLegend(0.424,0.814,0.997,0.989)
+    leg = r.TLegend(0.3347,0.2862,0.9265,0.4617)
     leg.AddEntry(f12.Get('SHiP'),'SHiP','lp')
-    leg.AddEntry(f12.Get('TLEP'),'TLEP 10^{12}Z^{0}, 1mm<r<1m','lp')
-    leg.AddEntry(gr13,'TLEP 10^{13}Z^{0}, 100#mum<r<5m','lp')
+    leg.AddEntry(f12.Get('TLEP'),'CMS 10^{11} W^{#pm}, 10cm < r < 1m','lp')
+    leg.AddEntry(gr13,'CMS 10^{11} W^{#pm}, 1cm < r < 1m','lp')
     leg.SetFillColor(r.kWhite)
     leg.SetTextSize(0.043)
     leg.Draw()

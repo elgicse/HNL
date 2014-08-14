@@ -51,7 +51,7 @@ def inBelt((x,y),model):
         return True
     return False
 
-def makeSensitivityBelt(existingData, model, ndivx, ndivy, verbose=0):
+def makeSensitivityBelt(existingData, source, model, ndivx, ndivy, verbose=0):
     points = [(x,y) for x in np.linspace(start[model-1], stop[model-1], ndivx) for y in np.linspace(yStop[model-1][1], yStart[model-1][0], ndivy) if inBelt((x,y),model-1)]
     data = []
     for i,point in enumerate(points):
@@ -64,7 +64,7 @@ def makeSensitivityBelt(existingData, model, ndivx, ndivy, verbose=0):
                 n = oldDatum[2]
                 break
         if not found:
-            n = roundToN( computeNEvents(model, mass, eps) )
+            n = roundToN( computeNEvents(source, model, mass, eps) )
         logmass = roundToN(point[0])
         logeps = roundToN(point[1])
         datum = ( logmass, logeps, n)
@@ -148,7 +148,8 @@ if __name__ == '__main__':
     model = 1
     print "Scanning model %s..."%model
     existingData3 = loadDataFile(model)
-    #data3 = makeSensitivityBelt(existingData3, model, 102, 100, verbose)
+    source = 'charm'
+    #data3 = makeSensitivityBelt(existingData3, source, model, 102, 100, verbose)
     data3 = []
     existingData3 = convertToLog(existingData3)
     data3.extend(existingData3)

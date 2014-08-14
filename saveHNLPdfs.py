@@ -4,25 +4,42 @@ from options import *
 class HistoHandler():
     """ Manage PDFs for sterile neutrino production and decay """
     #def __init__(self, pp, ep, model, process = 'Ds -> mu N,N -> nu nu nu', binsp = 90, binstheta = 80):
-    def __init__(self, pp, ep, model, binsp = 90, binstheta = 80):
+    def __init__(self, pp, ep, source, model, binsp = 90, binstheta = 80):
+        if (model != 1) and (model != 2) and (model != 3):
+            print 'HistoHandler: select model 1, 2 or 3. Aborting.'
+            sys.exit(-1)
         # Setup input
         self.pp = pp
         self.ep = ep
-        self.charmFile = r.TFile(self.pp.charmSourceFile, 'read')
-        self.charmTree = self.charmFile.Get(self.pp.charmTreeName)
         # Setup physics
         self.model = model
+        self.source = source
         self.ev = myNEvent(self.pp)#, process)
-        if self.model == 3:
-            self.ev.production.readString('Ds -> nu tau')
-        else:
-            self.ev.production.readString('Ds -> mu N')
+        
+        # Compute production channels weights
+        if self.model == 1:
+            self.lepton = 'e'
+        elif self.model == 2:
+            self.lepton = 'mu'
+        if (self.model == 1 or self.model == 2):
+            self.pp.computeProductionWeights(self.lepton)
+
+
+        self.charmFile = r.TFile(self.pp.charmSourceFile, 'read')
+        self.charmTree = self.charmFile.Get(self.pp.charmTreeName)
+
+        #if self.model == 3:
+        #    self.ev.production.readString('Ds -> nu tau')
+        #else:
+        #    self.ev.production.readString('Ds -> '+self.lepton+' N')
+        #self.prodHistName = "%s"%(''.join(self.ev.production.particles))
+        #self.prodHistName = "HNLProductionPDF_m%s"%self.pp.MN
         self.binstheta = binstheta
         self.binsp = binsp
+
     def makeProductionPDF(self):
         """ To run once for every different HNL mass """
         # Make mass histogram
-        self.prodHistName = "%s"%(''.join(self.ev.production.particles))
         self.tmax = self.ep.v1ThetaMax
         self.tmin = 0.
         self.thetaStep = (self.tmax-self.tmin)/self.binstheta
@@ -35,13 +52,6 @@ class HistoHandler():
         self.prodHist.SetTitle("PDF for N production (m_{N}=%s GeV)"%(self.pp.MN))
         self.prodHist.GetXaxis().SetTitle("P_{N} [GeV]")
         self.prodHist.GetYaxis().SetTitle("#theta_{N} [rad]")
-        # Compute production channels weights
-        if self.model == 1:
-            self.lepton = 'e'
-        elif self.model == 2:
-            self.lepton = 'mu'
-        if (self.model == 1 or self.model == 2):
-            self.pp.computeProductionWeights(self.lepton)
 
         # Fill mass histogram
         for charm in self.charmTree:
