@@ -110,23 +110,40 @@ def HNLDecayChain(hh, decayString, pN):
 
 
 
-def computeNEvents(source, model, mass, coupling):
+def computeNEvents(model, mass, coupling):
     """ Choose model 1, 2 or 3 """
-    if (source is not 'charm') and (source is not 'beauty'):
-        print 'computeNEvents: please select neutrino source (charm or beauty). Aborting.'
-        sys.exit(-1)
+    #if (source is not 'charm') and (source is not 'beauty'):
+    #    print 'computeNEvents: please select neutrino source (charm or beauty). Aborting.'
+    #    sys.exit(-1)
     pp = physicsParameters()
     pp.setNMass(mass)
+
     # Check kinematics
-    ml = 0.
-    if model == 1:
-        ml = pp.masses[pp.name2particle['e']]
-    elif model == 2:
-        ml = pp.masses[pp.name2particle['mu']]
-    if pp.MN > pp.masses[pp.name2particle['Ds']] - ml:
-        return 0.
-    if (model == 3) and (pp.MN > pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle['mu']]):
-        return 0.
+    if model == 3:
+        if pp.MN < (pp.masses['tau'] - pp.masses['e']):
+            source = 'charm'
+        elif pp.MN < (pp.masses['B'] - pp.masses['tau']):
+            source = 'beauty'
+        else:
+            return 0.
+    if model == 1 or model == 2:
+        leptons = [None, 'e', 'mu']
+        if pp.MN < (pp.masses['Ds'] - pp.masses[leptons[model]]):
+            source = 'charm'
+        elif pp.MN < (pp.masses['B'] - pp.masses[leptons[model]]):
+            source = 'beauty'
+        else:
+            return 0.
+
+    #ml = 0.
+    #if model == 1:
+    #    ml = pp.masses[pp.name2particle['e']]
+    #elif model == 2:
+    #    ml = pp.masses[pp.name2particle['mu']]
+    #if pp.MN > pp.masses[pp.name2particle['Ds']] - ml:
+    #    return 0.
+    #if (model == 3) and (pp.MN > pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle['mu']]):
+    #    return 0.
     model = model - 1
     if model == 0:
         couplings = [coupling, pp.models[model][1]*coupling, pp.models[model][2]*coupling]

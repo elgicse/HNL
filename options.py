@@ -6,6 +6,7 @@ import numpy as np
 from array import array
 from scipy import interpolate
 import tauToN
+import NFromBMesons
 
 
 def roundToN(x, n=2):
@@ -21,7 +22,7 @@ class physicsParameters():
     def __init__(self):
         self.charmSourceFile = 'CharmFixTarget.root'
         self.beautySourceFile = 'BeautyFixTarget.root'
-        self.charmTreeName = 'newTree'
+        self.sourceTreeName = 'newTree'
         # Contents of the source file
         self.nD = 5635
         self.nD0 = 11465
@@ -56,14 +57,14 @@ class physicsParameters():
                         'rho -> pi pi0',
                         'pi0 -> gamma gamma',
                         'Ds -> mu N',
-                        'Ds -> nu tau',
                         'Ds -> e N',
-                        'B -> e N', 'B -> mu N',
+                        'Ds -> nu tau',
+                        'B -> e N', 'B -> mu N', 'B -> tau N',
                         'tau -> mu N nu', 'tau -> e N nu',
                         'D -> K mu N', 'D -> K e N',
-                        'B -> D0 e N', 'B -> D0 mu N',
-                        'B0 -> D e N', 'B0 -> D mu N',
-                        'Bs -> Ds e N', 'Bs -> Ds mu N']
+                        'B -> D0 e N', 'B -> D0 mu N', 'B -> D0 tau N',
+                        'B0 -> D e N', 'B0 -> D mu N', 'B0 -> D tau N',
+                        'Bs -> Ds e N', 'Bs -> Ds mu N', 'Bs -> Ds tau N']
         self.masses = {'mu':0.10565*self.MeV,
                     'e':0.000511*self.MeV,
                     'tau':1.7768*self.MeV,
@@ -73,6 +74,7 @@ class physicsParameters():
                     'omega':0.78265*self.MeV,
                     'eta1':0.95778*self.MeV,
                     'K':0.493677*self.MeV,
+                    'K0':0.498614,
                     'Ds':1.9685*self.MeV,
                     'D':1.86962*self.MeV,
                     'D0':1.865,
@@ -99,7 +101,7 @@ class physicsParameters():
                             'mu':'mu','muTag':'mu',
                             'e':'e','eTag':'e',
                             'tau':'tau','tauTag':'tau',
-                            'K':'K',
+                            'K':'K', 'K0':'K0',
                             'eta':'eta',
                             'omega':'omega',
                             'eta1':'eta1',
@@ -123,9 +125,8 @@ class physicsParameters():
                             'B':'B',
                             'Bs':'Bs',
                             'B0':'B0'}
-        self.particle2id = {'D':411,
-                            'D0':421, # NOTA: ATTENZIONE QUESTO SAREBBE D0
-                            'Ds':431}
+        self.particle2id = {'D':411, 'D0':421, 'Ds':431,
+                            'B0':511, 'B':521, 'Bs':531}
         self.alphaQED = 1./137.
         self.heV = 6.58211928*pow(10.,-16)
         self.hGeV = self.heV * pow(10.,-9)
@@ -142,6 +143,7 @@ class physicsParameters():
         self.tauBs = 1.52e-12
         self.tauD = 1.e-12 #sec
         self.tauDs = 0.5e-12
+        self.tauD0 = 4.1e-13
         self.tauTau = 2.91e-13 #sec
         self.decayConstant = {'pi':0.1307, #GeV
                             'pi0':0.130, #GeV
@@ -705,7 +707,8 @@ class decayNBody():
             print 'decayNBody::readString ERROR: decay %s not found in database!'%decayName
             sys.exit(-1)
         self.name = decayName
-        self.particles = [self.pp.name2particle[p] for p in self.name.replace('->',' ').split()]
+        #self.particles = [self.pp.name2particle[p] for p in self.name.replace('->',' ').split()]
+        self.particles = [p for p in self.name.replace('->',' ').split()]
         self.mother = self.particles[0]
         self.motherMass = self.pp.masses[self.mother]
         self.pMother = r.TLorentzVector(0., 0., 0., self.motherMass)
@@ -713,7 +716,7 @@ class decayNBody():
         self.kid2 = self.particles[2]
         self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2]])
         self.nbody = 2
-        if self.name in (self.pp.decays[:7]+self.pp.decays[21:]):
+        if self.name in (self.pp.decays[:7]+self.pp.decays[22:]):
             self.nbody = 3
             self.kid3 = self.particles[3]
             self.childrenMasses = array('d', [self.pp.masses[self.kid1], self.pp.masses[self.kid2], self.pp.masses[self.kid3]])

@@ -27,6 +27,8 @@ def BR3Body(pp, meson, lepton): #only pseudoscalar into pseudoscalars (no B -> D
     alpha = indx[lepton]
     if meson == 'B' or meson == 'B0' or meson == 'Bs':
         V = pp.CKM.Vcb
+    elif meson == 'D' or meson == 'D0':
+        V = pp.CKM.Vcs
     if meson == 'B':
         MH = pp.masses['B']
         Mh = pp.masses['D0']
@@ -44,9 +46,13 @@ def BR3Body(pp, meson, lepton): #only pseudoscalar into pseudoscalars (no B -> D
         family = 'Bs'
     elif meson == 'D':
         MH = pp.masses['D']
-        Mh = pp.masses['K']
+        Mh = pp.masses['K0']
         tau = pp.tauD
-        V = pp.CKM.Vcs
+        family = 'D'
+    elif meson == 'D0':
+        MH = pp.masses['D0']
+        Mh = pp.masses['K']
+        tau = pp.tauD0
         family = 'D'
     else:
         print 'BR3Body: unknown meson!'
