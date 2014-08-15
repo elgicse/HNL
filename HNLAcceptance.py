@@ -131,8 +131,8 @@ def computeNEvents(model, mass, coupling):
         BRprod += productionBR(pp, source, mod) * pp.U2[mod-1]/U2tot
 
     NEv = (accv1*weight1 + accv2*weight2)*2.*BRprod*hh.ep.protonFlux
-    hh.weightedPDFoutfile.Close()
-    hh.prodPDFoutfile.Close()
+    #hh.weightedPDFoutfile.Close()
+    #hh.prodPDFoutfile.Close()
     hh.sourceFile.Close()
     outFilePath = "out/TextData/sensitivityScan-HNL-model%s.txt"%(model)
     with open(outFilePath,"a") as ofile:

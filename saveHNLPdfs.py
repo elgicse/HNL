@@ -162,9 +162,9 @@ class HistoHandler():
         # Make it a PDF
         histInt = self.prodHist.Integral("width")
         self.prodHist.Scale(1./histInt)
-        self.prodPDFfilename = 'out/NTuples/prodPDF_m%s_model%s.root'%(self.pp.MN,self.model)
-        self.prodPDFoutfile = r.TFile(self.prodPDFfilename,'recreate')
-        self.prodHist.Write("",5)
+        #self.prodPDFfilename = 'out/NTuples/prodPDF_m%s_model%s.root'%(self.pp.MN,self.model)
+        #self.prodPDFoutfile = r.TFile(self.prodPDFfilename,'recreate')
+        #self.prodHist.Write("",5)
 
     def scaleProductionPDF(self, couplings):
         # Now take the couplings and scale the PDF
@@ -209,12 +209,14 @@ class HistoHandler():
                     self.weightedProdHistVol1.Fill(mom,angle,acc1)
                     self.weightedProdHistVol2.Fill(mom,angle,acc2)
         # Save the PDF
-        self.outFileName = 'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
-        self.weightedPDFoutfile = r.TFile(self.outFileName,'update')
-        if self.accVol1 > 1.e-20 and self.accVol2 > 1.e-20:
-            self.weightedProdHistVol1.Write("",5)
-            self.weightedProdHistVol2.Write("",5)
-        else:
+        #self.outFileName = 'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
+        #self.weightedPDFoutfile = r.TFile(self.outFileName,'update')
+        #if self.accVol1 > 1.e-20 and self.accVol2 > 1.e-20:
+        #    self.weightedProdHistVol1.Write("",5)
+        #    self.weightedProdHistVol2.Write("",5)
+        #else:
+        #    self.accVol1, self.accVol2 = 0., 0.
+        if self.accVol1 < 1.e-20 and self.accVol2 < 1.e-20:
             self.accVol1, self.accVol2 = 0., 0.
         return self.accVol1, self.accVol2
 
