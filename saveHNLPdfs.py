@@ -23,13 +23,13 @@ class HistoHandler():
             self.lepton = 'tau'
 
         if self.source == 'charm':
-            self.sourceFile = r.TFile(self.pp.charmSourceFile, 'read')
+            self.sourceFile = r.TFile(self.pp.root_dir_path+'/'+self.pp.charmSourceFile, 'read')
             self.sourceTree = self.sourceFile.Get(self.pp.sourceTreeName)
-            # Compute production channels weights
-            if (self.model == 1 or self.model == 2):
-                self.pp.computeProductionWeights(self.lepton)
+            ## Compute production channels weights
+            #if (self.model == 1 or self.model == 2):
+            #    self.pp.computeProductionWeights(self.lepton)
         elif self.source == 'beauty':
-            self.sourceFile = r.TFile(self.pp.beautySourceFile, 'read')
+            self.sourceFile = r.TFile(self.pp.root_dir_path+'/'+self.pp.beautySourceFile, 'read')
             self.sourceTree = self.sourceFile.Get(self.pp.sourceTreeName)
         else:
             print 'HistoHandler: please specify source (charm or beauty).'
@@ -162,7 +162,7 @@ class HistoHandler():
         # Make it a PDF
         histInt = self.prodHist.Integral("width")
         self.prodHist.Scale(1./histInt)
-        #self.prodPDFfilename = 'out/NTuples/prodPDF_m%s_model%s.root'%(self.pp.MN,self.model)
+        #self.prodPDFfilename = self.pp.root_dir_path+'/'+'out/NTuples/prodPDF_m%s_model%s.root'%(self.pp.MN,self.model)
         #self.prodPDFoutfile = r.TFile(self.prodPDFfilename,'recreate')
         #self.prodHist.Write("",5)
 
@@ -209,7 +209,7 @@ class HistoHandler():
                     self.weightedProdHistVol1.Fill(mom,angle,acc1)
                     self.weightedProdHistVol2.Fill(mom,angle,acc2)
         # Save the PDF
-        #self.outFileName = 'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
+        #self.outFileName = self.pp.root_dir_path+'/'+'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
         #self.weightedPDFoutfile = r.TFile(self.outFileName,'update')
         #if self.accVol1 > 1.e-20 and self.accVol2 > 1.e-20:
         #    self.weightedProdHistVol1.Write("",5)

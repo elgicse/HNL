@@ -19,7 +19,8 @@ def roundToN(x, n=2):
 
 class physicsParameters():
     """ Set the physics parameters here """
-    def __init__(self):
+    def __init__(self, root_dir_path = '/home/elena/Desktop/PhD-Work/0-SHIP/HiddenParticlesSensitivity/SterileNeutrinos'):
+        self.root_dir_path = root_dir_path
         self.charmSourceFile = 'CharmFixTarget.root'
         self.beautySourceFile = 'BeautyFixTarget.root'
         self.sourceTreeName = 'newTree'

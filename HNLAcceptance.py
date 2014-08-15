@@ -77,9 +77,9 @@ def HNLDecayChain(hh, decayString, pN):
     return kids
 
 
-def computeNEvents(model, mass, coupling):
+def computeNEvents(model, mass, coupling, root_dir_path='/home/elena/Desktop/PhD-Work/0-SHIP/HiddenParticlesSensitivity/SterileNeutrinos'):
     """ Choose model 1, 2 or 3 """
-    pp = physicsParameters()
+    pp = physicsParameters(root_dir_path)
     pp.setNMass(mass)
     # Check kinematics
     leptons = [None, 'e', 'mu', 'tau']
@@ -134,7 +134,7 @@ def computeNEvents(model, mass, coupling):
     #hh.weightedPDFoutfile.Close()
     #hh.prodPDFoutfile.Close()
     hh.sourceFile.Close()
-    outFilePath = "out/TextData/sensitivityScan-HNL-model%s.txt"%(model)
+    outFilePath = root_dir_path + "/out/TextData/sensitivityScan-HNL-model%s.txt"%(model)
     with open(outFilePath,"a") as ofile:
         try:
             ofile.write('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s\n'%(mass, coupling, hh.pp.computeNProdBR(model-1),

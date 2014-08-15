@@ -81,7 +81,7 @@ def inBelt((x,y),model):
         return True
     return False
 
-def makeSensitivityBelt(existingData, model, ndivx, ndivy, verbose=0):
+def makeSensitivityBelt(root_dir_path, existingData, model, ndivx, ndivy, verbose=0):
     points = [(x,y) for x in np.linspace(start[model-1], stop[model-1], ndivx) for y in np.linspace(y_start[model-1], y_stop[model-1], ndivy) if inBelt((x,y),model-1)]
     print "Scanning number of events on %s phase-space points"%len(points)
     data = []
@@ -95,7 +95,7 @@ def makeSensitivityBelt(existingData, model, ndivx, ndivy, verbose=0):
                 n = oldDatum[2]
                 break
         if not found:
-            n = roundToN( computeNEvents(model, mass, eps) )
+            n = roundToN( computeNEvents(model, mass, eps, root_dir_path) )
         logmass = roundToN(point[0])
         logeps = roundToN(point[1])
         datum = ( logmass, logeps, n)
@@ -176,12 +176,14 @@ def readFile(filename):
 
 if __name__ == '__main__':
     model = int(sys.argv[1])
+    root_dir_path = sys.argv[2]
+    print 'Work directory is: %s'%root_dir_path
     verbose = True
     print "Scanning model %s..."%model
     existingData = loadDataFile(model)
     print 'Loaded %s previous data points.'%len(existingData)
-    #data = makeSensitivityBelt(existingData, model, 200, 150, verbose)
-    data = makeSensitivityBelt(existingData, model, 4, 4, verbose)
+    data = makeSensitivityBelt(root_dir_path, existingData, model, 200, 150, verbose)
+    #data = makeSensitivityBelt(existingData, model, 4, 4, verbose)
     #data3 = []
     existingData = convertToLog(existingData)
     data.extend(existingData)
