@@ -138,8 +138,8 @@ def makeCountours(data,m):
     bot = list(set(bot))
     return bot
 
-def loadDataFile(model):
-    filepath = "out/TextData/sensitivityScan-HNL-model%s.txt"%model
+def loadDataFile(model, root_dir_path='/home/elena/Desktop/PhD-Work/0-SHIP/HiddenParticlesSensitivity/SterileNeutrinos'):
+    filepath = root_dir_path+"/out/TextData/sensitivityScan-HNL-model%s.txt"%model
     if not os.path.isfile(filepath):
         return []
     data = []
@@ -164,9 +164,9 @@ def eq(n1, n2, toll = 1.e-01):
         return True
     return False
 
-def readFile(filename):
+def readFile(filename, root_dir_path='/home/elena/Desktop/PhD-Work/0-SHIP/HiddenParticlesSensitivity/SterileNeutrinos'):
     data = []
-    with open('Limits/existing/'+filename,'r') as f:
+    with open(root_dir_path+'/Limits/existing/'+filename,'r') as f:
         for line in f:
             line = line.split(',')
             data.append((float(line[0]), float(line[1])))
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     print 'Work directory is: %s'%root_dir_path
     verbose = True
     print "Scanning model %s..."%model
-    existingData = loadDataFile(model)
+    existingData = loadDataFile(model, root_dir_path)
     print 'Loaded %s previous data points.'%len(existingData)
     data = makeSensitivityBelt(root_dir_path, existingData, model, 200, 150, verbose)
     #data = makeSensitivityBelt(existingData, model, 4, 4, verbose)
@@ -327,7 +327,7 @@ if __name__ == '__main__':
     elif model == 3:
         baustring = 'tautau-normal'
 
-    seesaw = readFile('seesaw-%s.csv'%baustring)
+    seesaw = readFile('seesaw-%s.csv'%baustring, root_dir_path)
     grss = r.TGraph(len(seesaw))
     for i in xrange(len(seesaw)):
         grss.SetPoint(i,seesaw[i][0],seesaw[i][1])
@@ -338,7 +338,7 @@ if __name__ == '__main__':
     grss.SetLineColor(r.kBlack)
     grss.SetMarkerColor(r.kBlack)
 
-    baulow = readFile('bau-low-%s.csv'%baustring)
+    baulow = readFile('bau-low-%s.csv'%baustring, root_dir_path)
     grbl = r.TGraph(len(baulow))
     for i in xrange(len(baulow)):
         grbl.SetPoint(i,baulow[i][0],baulow[i][1])
@@ -349,7 +349,7 @@ if __name__ == '__main__':
     grbl.SetLineColor(r.kBlack)
     grbl.SetMarkerColor(r.kBlack)
 
-    bauhigh = readFile('bau-high-%s.csv'%baustring)
+    bauhigh = readFile('bau-high-%s.csv'%baustring, root_dir_path)
     grbh = r.TGraph(len(bauhigh))
     for i in xrange(len(bauhigh)):
         grbh.SetPoint(i,bauhigh[i][0],bauhigh[i][1])
@@ -384,7 +384,7 @@ if __name__ == '__main__':
     mgr.GetXaxis().SetTitleOffset(0.90)
     mgr.GetYaxis().SetTitleOffset(0.90)
     
-    graphFile = r.TFile('out/plots/SHiP-graphs-model%s.root'%model, 'recreate')
+    graphFile = r.TFile(root_dir_path+'/out/plots/SHiP-graphs-model%s.root'%model, 'recreate')
     gr.Write()
     cSmooth.Write()
     GraphTemp.Write()
