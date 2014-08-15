@@ -1,4 +1,5 @@
 from __future__ import division
+import sys
 import os
 import struct
 from HNLAcceptance import *
@@ -8,13 +9,18 @@ mTau = ppp.masses[ppp.name2particle['tau']]
 mMu = ppp.masses[ppp.name2particle['mu']]
 mDs = ppp.masses[ppp.name2particle['Ds']]
 me = ppp.masses[ppp.name2particle['e']]
+mB = ppp.masses['B']
 
 start = [math.log10(0.1)]*3 #GeV
 #start = [math.log10(6.e-03)]*3
-stop = [math.log10(mDs-mMu), math.log10(mDs-mMu), math.log10(mTau-mMu)]
+#stop = [math.log10(mDs-mMu), math.log10(mDs-mMu), math.log10(mTau-mMu)]
+stop = [math.log10(mB-me), math.log10(mB-mMu), math.log10(mB-mTau)]
 
-yStart = [[math.log10(5.e-06)+2, math.log10(1.e-07)+2]]*3 #model 3
-yStop = [[math.log10(1.e-09)+2, math.log10(7.e-11)+2]]*3 #model 3
+y_start = [math.log10(1.e-12)]*3
+y_stop = [math.log10(1.e-4)]*3
+
+#yStart = [[math.log10(5.e-06), math.log10(1.e-07)]]*3 #model 3
+#yStop = [[math.log10(1.e-09), math.log10(5.e-11)-1]]*3 #model 3
 #yStart = [[math.log10(5.e-06), math.log10(1.e-07)]]*3 #model 1 & 2
 #yStop = [[math.log10(1.e-09), math.log10(7.e-11)]]*3 #model 1 & 2
 #print 25*(math.log10(mTau) - math.log10(5.e-03))/(math.log10(mTau) + 1.)
@@ -28,6 +34,30 @@ def lineForTwoPoints(p1, p2, x):
     y2 = p2[1]
     slop = (y2-y1)/(x2-x1)
     return y1 + slop*(x - x1)
+
+def Vline(model,p1,p2,p3,x):
+    x1 = p1[model][0]
+    x2 = p2[model][0]
+    x3 = p3[model][0]
+    y1 = p1[model][1]
+    y2 = p2[model][1]
+    y3 = p3[model][1]
+    slop1 = (y2-y1)/(x2-x1)
+    slop2 = (y3-y2)/(x3-x2)
+    if x < x2:
+        y = y1 + slop1*(x - x1)
+    else:
+        y = y2 + slop2*(x - x2)
+    return y
+
+
+p1high = [(math.log10(0.1), math.log10(7.e-5) )]*3
+p1low  = [(math.log10(0.1), math.log10(1.e-7) )]*3
+p2high = [(math.log10(1.5), math.log10(3.e-8) )]*2 + [(math.log10(1.5), math.log10(1.e-6))]
+p2low  = [(math.log10(1.5), math.log10(2.e-12))]*2 + [(math.log10(1.5), math.log10(8.e-11))]
+p3high = [(math.log10(6.),  math.log10(5.e-5) )]*2 + [(math.log10(3.), math.log10(2.e-5))]
+p3low  = [(math.log10(6.),  math.log10(1.e-7) )]*2 + [(math.log10(3.), math.log10(7.e-8))]
+
 
 def roundToN(x, n=2):
     if x:
@@ -46,13 +76,14 @@ def beltSegment(pos, yi, xi, slop, x):
     return starty - slop*xi + slop*x
 
 def inBelt((x,y),model):
-    if (start[model] < x < stop[model]) and (lineForTwoPoints((start[model],yStart[model][1]),(stop[model],yStop[model][1]),x) < y < lineForTwoPoints((start[model],yStart[model][0]),(stop[model],yStop[model][0]),x)):
-    #if (start[model] < x < stop[model]) and (beltSegment('lower',yStart[model],start[model],slope,x) < y < beltSegment('upper',yStart[model],start[model],slope,x)):
+    #if (start[model] < x < stop[model]) and (lineForTwoPoints((start[model],yStart[model][1]),(stop[model],yStop[model][1]),x) < y < lineForTwoPoints((start[model],yStart[model][0]),(stop[model],yStop[model][0]),x)):
+    if (start[model] < x < stop[model]) and (Vline(model-1,p1low,p2low,p3low,x) < y < Vline(model-1,p1high,p2high,p3high,x)):
         return True
     return False
 
-def makeSensitivityBelt(existingData, source, model, ndivx, ndivy, verbose=0):
-    points = [(x,y) for x in np.linspace(start[model-1], stop[model-1], ndivx) for y in np.linspace(yStop[model-1][1], yStart[model-1][0], ndivy) if inBelt((x,y),model-1)]
+def makeSensitivityBelt(existingData, model, ndivx, ndivy, verbose=0):
+    points = [(x,y) for x in np.linspace(start[model-1], stop[model-1], ndivx) for y in np.linspace(y_start[model-1], y_stop[model-1], ndivy) if inBelt((x,y),model-1)]
+    print "Scanning number of events on %s phase-space points"%len(points)
     data = []
     for i,point in enumerate(points):
         found = False
@@ -64,12 +95,12 @@ def makeSensitivityBelt(existingData, source, model, ndivx, ndivy, verbose=0):
                 n = oldDatum[2]
                 break
         if not found:
-            n = roundToN( computeNEvents(source, model, mass, eps) )
+            n = roundToN( computeNEvents(model, mass, eps) )
         logmass = roundToN(point[0])
         logeps = roundToN(point[1])
         datum = ( logmass, logeps, n)
         if verbose:
-            if not i%50:
+            if not i%250:
                 print "Point %s of %s: \t log10(mass) %s \t log10(U2) %s \t\t Events: %s"%(i, len(points), logmass, logeps, n)
                 gc.collect()
         data.append(datum)
@@ -94,7 +125,7 @@ def makeCountours(data,m):
     # Now for every mass value select only the eps value with N closest to m
     botContour = sorted(data, key=lambda x: x[0]) #sorted by mass
     bot = []
-    right = []
+    #right = []
     for x in xAxis:
         tempBot = []
         for datum in botContour:
@@ -144,85 +175,85 @@ def readFile(filename):
 
 
 if __name__ == '__main__':
+    model = int(sys.argv[1])
     verbose = True
-    model = 1
     print "Scanning model %s..."%model
-    existingData3 = loadDataFile(model)
-    source = 'charm'
-    #data3 = makeSensitivityBelt(existingData3, source, model, 102, 100, verbose)
-    data3 = []
-    existingData3 = convertToLog(existingData3)
-    data3.extend(existingData3)
+    existingData = loadDataFile(model)
+    print 'Loaded %s previous data points.'%len(existingData)
+    #data = makeSensitivityBelt(existingData, model, 200, 150, verbose)
+    data = makeSensitivityBelt(existingData, model, 4, 4, verbose)
+    #data3 = []
+    existingData = convertToLog(existingData)
+    data.extend(existingData)
     gc.collect()
-    data3 = list(set(data3))
+    data = list(set(data))
 
+    #pp = physicsParameters()
+    #rescaledData = []
+    #outFilePath = "out/TextData/sensitivityScan-HNL-model%s-rescaled.txt"%(model)
+    #for j,datum in enumerate(data3):
+    #    if not j%100:
+    #        print "Rescaling point %s of %s..."%(j,len(data3))
+    #        gc.collect()
+    #    mass = 10.**datum[0]
+    #    coupling = 10.**datum[1]
+    #    pp.setNMass(mass)
+    #    if model == 1:
+    #        couplings = [coupling, pp.models[model-1][1]*coupling, pp.models[model-1][2]*coupling]
+    #    elif model == 2:
+    #        couplings = [pp.models[model-1][0]*coupling, coupling, pp.models[model-1][2]*coupling]
+    #    elif model == 3:
+    #        couplings = [pp.models[model-1][0]*coupling, pp.models[model-1][1]*coupling, coupling]
+    #    pp.setNCoupling(couplings)
+    #    pp.computeProductionWeights('e')
+    #    pp.computeProductionWeights('mu')
+    #    adjustedBRs = ( ((pp.nDs + (pp.nD+pp.nD0)*pp.w3body['e']) / pp.nTotCharm) * pp.computeNProdBR(0),
+    #        ((pp.nDs + (pp.nD+pp.nD0)*pp.w3body['mu']) / pp.nTotCharm) * pp.computeNProdBR(1),
+    #        ((pp.nDs/pp.nTotCharm)*pp.BRDsToTau) * pp.computeNProdBR(2) )
+    #    U2tot = sum(pp.U2)
+    #    rescaledNevt = (( adjustedBRs[0]*pp.U2[0]/U2tot +
+    #        adjustedBRs[1]*pp.U2[1]/U2tot +
+    #        2*adjustedBRs[2]*pp.U2[2]/U2tot ) / adjustedBRs[model-1]) * datum[2]  # majorana stuff was not taken into account in model 3!! 30/07/2014
+    #    if not j%100:
+    #        print "%s -> %s"%(datum[2],rescaledNevt)
+    #    #if model == 3:
+    #    #    rescaledNevt *= 2 # majorana stuff was not taken into account!! 30/07/2014
+    #    rescaledData.append( (roundToN(math.log10(mass)) ,
+    #    roundToN(math.log10(coupling)),
+    #    rescaledNevt ))
+    #    with open(outFilePath,'a') as ofile:
+    #        try:
+    #            ofile.write('%s \t %s \t %s\n'%(mass, coupling, roundToN(rescaledNevt)))
+    #        except KeyboardInterrupt:
+    #            pass
+    #data3 = rescaledData
+
+    data.sort(key=lambda x: x[1])
+    data.sort(key=lambda x: x[0])
+    bot = makeCountours(data,2.3)
+    bot.sort(key=lambda x: x[1])
+    bot.sort(key=lambda x: x[0])
+    num = len(bot)
+    gr = r.TGraph(num+1)
     pp = physicsParameters()
-    rescaledData = []
-    outFilePath = "out/TextData/sensitivityScan-HNL-model%s-rescaled.txt"%(model)
-    for j,datum in enumerate(data3):
-        if not j%100:
-            print "Rescaling point %s of %s..."%(j,len(data3))
-            gc.collect()
-        mass = 10.**datum[0]
-        coupling = 10.**datum[1]
-        pp.setNMass(mass)
-        if model == 1:
-            couplings = [coupling, pp.models[model-1][1]*coupling, pp.models[model-1][2]*coupling]
-        elif model == 2:
-            couplings = [pp.models[model-1][0]*coupling, coupling, pp.models[model-1][2]*coupling]
-        elif model == 3:
-            couplings = [pp.models[model-1][0]*coupling, pp.models[model-1][1]*coupling, coupling]
-        pp.setNCoupling(couplings)
-        pp.computeProductionWeights('e')
-        pp.computeProductionWeights('mu')
-        adjustedBRs = ( ((pp.nDs + (pp.nD+pp.nD0)*pp.w3body['e']) / pp.nTotCharm) * pp.computeNProdBR(0),
-            ((pp.nDs + (pp.nD+pp.nD0)*pp.w3body['mu']) / pp.nTotCharm) * pp.computeNProdBR(1),
-            ((pp.nDs/pp.nTotCharm)*pp.BRDsToTau) * pp.computeNProdBR(2) )
-        U2tot = sum(pp.U2)
-        rescaledNevt = (( adjustedBRs[0]*pp.U2[0]/U2tot +
-            adjustedBRs[1]*pp.U2[1]/U2tot +
-            2*adjustedBRs[2]*pp.U2[2]/U2tot ) / adjustedBRs[model-1]) * datum[2]  # majorana stuff was not taken into account in model 3!! 30/07/2014
-        if not j%100:
-            print "%s -> %s"%(datum[2],rescaledNevt)
-        #if model == 3:
-        #    rescaledNevt *= 2 # majorana stuff was not taken into account!! 30/07/2014
-        rescaledData.append( (roundToN(math.log10(mass)) ,
-        roundToN(math.log10(coupling)),
-        rescaledNevt ))
-        with open(outFilePath,'a') as ofile:
-            try:
-                ofile.write('%s \t %s \t %s\n'%(mass, coupling, roundToN(rescaledNevt)))
-            except KeyboardInterrupt:
-                pass
-
-    data3 = rescaledData
-
-    data3.sort(key=lambda x: x[1])
-    data3.sort(key=lambda x: x[0])
-    bot3 = makeCountours(data3,2.3)
-    bot3.sort(key=lambda x: x[1])
-    bot3.sort(key=lambda x: x[0])
-    num3 = len(bot3)
-    gr3 = r.TGraph(num3+1)
-    pp = physicsParameters()
-    for i in xrange(len(bot3)):
-        gr3.SetPoint(i,10.**bot3[i][0],pp.factors[model-1]*10.**bot3[i][1])
-    gr3.SetPoint(num3,max([10.**x[0] for x in bot3]),max([10.**x[1] for x in bot3]))
+    for i in xrange(len(bot)):
+        gr.SetPoint(i,10.**bot[i][0],pp.factors[model-1]*10.**bot[i][1]) # plot as a function of U^2 tot
+    gr.SetPoint(num,max([10.**x[0] for x in bot]),max([10.**x[1] for x in bot])) #close the plot
 
     # qui provo a smoothare
-    logGraphTemp = r.TGraph(len(bot3))
-    for i in xrange(len(bot3)):
-        logGraphTemp.SetPoint(i, bot3[i][0], bot3[i][1])
-    logGraphOut1 = r.TGraph(len(bot3))
-    logGraphOut2 = r.TGraph(len(bot3))
-    logGraphOut3 = r.TGraph(len(bot3))
+    logGraphTemp = r.TGraph(len(bot))
+    for i in xrange(len(bot)):
+        logGraphTemp.SetPoint(i, bot[i][0], bot[i][1])
+    logGraphOut1 = r.TGraph(len(bot))
+    logGraphOut2 = r.TGraph(len(bot))
+    logGraphOut3 = r.TGraph(len(bot))
     logGraphSmoother1 = r.TGraphSmooth()
     logGraphSmoother2 = r.TGraphSmooth()
     logGraphSmoother3 = r.TGraphSmooth()
     logGraphOut1 = logGraphSmoother1.SmoothLowess(logGraphTemp)
     logGraphOut2 = logGraphSmoother2.SmoothKern(logGraphTemp)
     logGraphOut3 = logGraphSmoother3.SmoothSuper(logGraphTemp)
-    cSmooth = r.TCanvas()
+    cSmooth = r.TCanvas('cSmooth', 'cSmooth')
     cSmooth.Divide(2,3)
     cSmooth.cd(1)
     logGraphTemp.SetTitle('Log Original')
@@ -240,10 +271,10 @@ if __name__ == '__main__':
     logGraphNoErrs3.SetTitle('Log Super')
     logGraphNoErrs3.Draw('alp')
     cp5 = cSmooth.cd(5)
-    GraphTemp = r.TGraph(len(bot3)+1)
-    for i in xrange(len(bot3)):
-        GraphTemp.SetPoint(i, 10.**bot3[i][0], pp.factors[model-1]*10.**bot3[i][1])
-    GraphTemp.SetPoint(num3,max([10.**x[0] for x in bot3]),max([10.**x[1] for x in bot3]))
+    GraphTemp = r.TGraph(len(bot)+1)
+    for i in xrange(len(bot)):
+        GraphTemp.SetPoint(i, 10.**bot[i][0], pp.factors[model-1]*10.**bot[i][1])
+    GraphTemp.SetPoint(num,max([10.**x[0] for x in bot]),max([10.**x[1] for x in bot]))
     cp5.SetLogx()
     cp5.SetLogy()
     GraphTemp.SetTitle('Original')
@@ -275,23 +306,26 @@ if __name__ == '__main__':
     #    gr3.SetPoint(i,10.**bot3[i][0],10.**bot3[i][1])
     #gr3.SetPoint(num3,mTau,2.e-10)
     #gr3.SetPoint(num3+1,mTau,max([10.**x[1] for x in bot3]))
-    gr3.SetLineWidth(1004)
-    gr3.SetFillStyle(3002)
-    gr3.SetLineColor(r.kBlue)
-    gr3.SetMarkerColor(r.kBlue)
-    gr3.SetTitle('HNL model III - ignore BAUs')
-    graphFile = r.TFile('out/plots/grModel%s.root'%model, 'recreate')
-    gr3.Write()
-    GraphNoErrs3.Write()
-    graphFile.Close()
+    gr.SetLineWidth(1004)
+    gr.SetFillStyle(3002)
+    gr.SetLineColor(r.kBlue)
+    gr.SetMarkerColor(r.kBlue)
+    gr.SetTitle('HNL model %s - ignore BAUs'%model)
 
-    ascisse = [x[0] for x in bot3]
-    ordinate = [lineForTwoPoints((start[2],yStart[2][1]),(stop[2],yStop[2][1]),x) for x in ascisse]
-    ordinate2 = [lineForTwoPoints((start[2],yStart[2][0]),(stop[2],yStop[2][0]),x) for x in ascisse]
+    ascisse = [x[0] for x in bot]
+    ordinate = [Vline(model-1,p1low,p2low,p3low,x) for x in ascisse]#[lineForTwoPoints((start[2],yStart[2][1]),(stop[2],yStop[2][1]),x) for x in ascisse]
+    ordinate2 = [Vline(model-1,p1high,p2high,p3high,x) for x in ascisse]#[lineForTwoPoints((start[2],yStart[2][0]),(stop[2],yStop[2][0]),x) for x in ascisse]
     grline = r.TGraph(len(ascisse),array('d',[10.**x for x in ascisse]),array('d',[10.**y for y in ordinate]))
     grline2 = r.TGraph(len(ascisse),array('d',[10.**x for x in ascisse]),array('d',[10.**y for y in ordinate2]))
 
-    seesaw = readFile('seesaw-tautau-normal.csv')
+    if model == 1:
+        baustring = 'ee-inverted'
+    elif model == 2:
+        baustring = 'mumu-normal'
+    elif model == 3:
+        baustring = 'tautau-normal'
+
+    seesaw = readFile('seesaw-%s.csv'%baustring)
     grss = r.TGraph(len(seesaw))
     for i in xrange(len(seesaw)):
         grss.SetPoint(i,seesaw[i][0],seesaw[i][1])
@@ -302,22 +336,22 @@ if __name__ == '__main__':
     grss.SetLineColor(r.kBlack)
     grss.SetMarkerColor(r.kBlack)
 
-    baulow = readFile('bau-low-tautau-normal.csv')
+    baulow = readFile('bau-low-%s.csv'%baustring)
     grbl = r.TGraph(len(baulow))
     for i in xrange(len(baulow)):
         grbl.SetPoint(i,baulow[i][0],baulow[i][1])
-    grbl.SetTitle('Seesaw')
+    grbl.SetTitle('BAU low')
     grbl.SetLineWidth(-4004)
     grbl.SetLineStyle(1)
     grbl.SetFillStyle(3002)
     grbl.SetLineColor(r.kBlack)
     grbl.SetMarkerColor(r.kBlack)
 
-    bauhigh = readFile('bau-high-tautau-normal.csv')
+    bauhigh = readFile('bau-high-%s.csv'%baustring)
     grbh = r.TGraph(len(bauhigh))
     for i in xrange(len(bauhigh)):
         grbh.SetPoint(i,bauhigh[i][0],bauhigh[i][1])
-    grbh.SetTitle('Seesaw')
+    grbh.SetTitle('BAU high')
     grbh.SetLineWidth(5004)
     grbh.SetLineStyle(1)
     grbh.SetFillStyle(3002)
@@ -329,21 +363,39 @@ if __name__ == '__main__':
     GraphNoErrs3.SetLineColor(r.kRed)
     GraphNoErrs3.SetMarkerColor(r.kRed)
 
-    c3 = r.TCanvas()
+    c3 = r.TCanvas('SHiP sensitivity (model %s)'%model, 'SHiP sensitivity (model %s)'%model)
     c3.SetLogx()
     c3.SetLogy()
-    gr = r.TMultiGraph()
-    gr.Add(grbh)
-    gr.Add(grbl)
-    gr.Add(grss)
-    gr.Add(gr3)
-    gr.Add(GraphNoErrs3)
-    gr.Add(grline)
-    gr.Add(grline2)
-    gr.Draw('alp')
-    gr.GetXaxis().SetTitle('HNL mass (GeV)')
-    gr.GetYaxis().SetTitle('U_{#tau}^{2}')
-    gr.GetXaxis().SetTitleSize(0.05)
-    gr.GetYaxis().SetTitleSize(0.05)
-    gr.GetXaxis().SetTitleOffset(0.90)
-    gr.GetYaxis().SetTitleOffset(0.90)
+    mgr = r.TMultiGraph('mgr-model%s'%model, 'mgr-model%s'%model)
+    mgr.Add(grbh)
+    mgr.Add(grbl)
+    mgr.Add(grss)
+    mgr.Add(gr)
+    mgr.Add(GraphNoErrs3)
+    mgr.Add(grline)
+    mgr.Add(grline2)
+    mgr.Draw('alp')
+    mgr.GetXaxis().SetTitle('HNL mass (GeV)')
+    mgr.GetYaxis().SetTitle('U_{tot}^{2}')
+    mgr.GetXaxis().SetTitleSize(0.05)
+    mgr.GetYaxis().SetTitleSize(0.05)
+    mgr.GetXaxis().SetTitleOffset(0.90)
+    mgr.GetYaxis().SetTitleOffset(0.90)
+    
+    graphFile = r.TFile('out/plots/SHiP-graphs-model%s.root'%model, 'recreate')
+    gr.Write()
+    cSmooth.Write()
+    GraphTemp.Write()
+    logGraphTemp.Write()
+    logGraphNoErrs1.Write()
+    logGraphNoErrs2.Write()
+    logGraphNoErrs3.Write()
+    GraphNoErrs3.Write()
+    grbh.Write()
+    grbl.Write()
+    grss.Write()
+    grline.Write()
+    grline2.Write()
+    mgr.Write()
+    c3.Write()
+    graphFile.Close()
