@@ -82,11 +82,12 @@ class HistoHandler():
         #            self.prodHist.Fill(pKid3.P()*self.pp.w3body[self.lepton], pKid3.Theta()*self.pp.w3body[self.lepton])
 
         if self.source == 'charm':
+            print 'Found %s charms'%self.sourceTree.GetEntries()
             if self.model == 3:
                 # With Utau dominating, the main source of N are taus from Ds
-                for charm in self.sourceTree:
-                    pCharm = r.TLorentzVector(charm.CharmPx, charm.CharmPy, charm.CharmPz, charm.CharmE)
-                    if charm.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['tau'] - self.pp.masses['e']):
+                for ch in self.sourceTree:
+                    pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                    if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['tau'] - self.pp.masses['e']):
                         self.ev.production.readString('Ds -> nu tau')
                         self.ev.production.setPMother(pCharm)
                         pKid1, pKid2 = self.ev.production.makeDecay()
@@ -100,19 +101,19 @@ class HistoHandler():
                 wds = NFromBMesons.BR2Body(self.pp, 'Ds', self.lepton)
                 wd = NFromBMesons.BR3Body(self.pp, 'D', self.lepton)
                 wd0 = NFromBMesons.BR3Body(self.pp, 'D0', self.lepton)
-                for charm in self.sourceTree:
-                    pCharm = r.TLorentzVector(charm.CharmPx, charm.CharmPy, charm.CharmPz, charm.CharmE)
-                    if charm.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['Ds']-self.pp.masses[self.lepton]):
+                for ch in self.sourceTree:
+                    pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                    if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['Ds']-self.pp.masses[self.lepton]):
                         self.ev.production.readString('Ds -> '+self.lepton+' N')
                         self.ev.production.setPMother(pCharm)
                         pKid1, pKid2 = self.ev.production.makeDecay()
                         self.prodHist.Fill(pKid2.P(), pKid2.Theta())
-                    elif charm.CharmPID == self.pp.particle2id['D'] and self.pp.MN < (self.pp.masses['D']-self.pp.masses['K0']-self.pp.masses[self.lepton]):
+                    elif ch.CharmPID == self.pp.particle2id['D'] and self.pp.MN < (self.pp.masses['D']-self.pp.masses['K0']-self.pp.masses[self.lepton]):
                         self.ev.production.readString('D -> K0 '+self.lepton+' N')
                         self.ev.production.setPMother(pCharm)
                         pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
                         self.prodHist.Fill(pKid3.P()*wd/wds, pKid3.Theta()*wd/wds)
-                    elif charm.CharmPID == self.pp.particle2id['D0'] and self.pp.MN < (self.pp.masses['D0']-self.pp.masses['K']-self.pp.masses[self.lepton]):
+                    elif ch.CharmPID == self.pp.particle2id['D0'] and self.pp.MN < (self.pp.masses['D0']-self.pp.masses['K']-self.pp.masses[self.lepton]):
                         self.ev.production.readString('D0 -> K '+self.lepton+' N')
                         self.ev.production.setPMother(pCharm)
                         pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
@@ -120,6 +121,7 @@ class HistoHandler():
 
 
         elif self.source == 'beauty':
+            print 'Found %s bs'%self.sourceTree.GetEntries()
             wb2 = NFromBMesons.BR2Body(self.pp, 'B', self.lepton)
             wb3 = NFromBMesons.BR3Body(self.pp, 'B', self.lepton)
             # I take a reference BR (B->NX) and rescale the contributions to the pdf accordingly for the other channels.

@@ -55,8 +55,8 @@ p1high = [(math.log10(0.1), math.log10(7.e-5) )]*3
 p1low  = [(math.log10(0.1), math.log10(1.e-7) )]*3
 p2high = [(math.log10(1.5), math.log10(3.e-8) )]*2 + [(math.log10(1.5), math.log10(1.e-6))]
 p2low  = [(math.log10(1.5), math.log10(2.e-12))]*2 + [(math.log10(1.5), math.log10(8.e-11))]
-p3high = [(math.log10(6.),  math.log10(5.e-5) )]*2 + [(math.log10(3.), math.log10(2.e-5))]
-p3low  = [(math.log10(6.),  math.log10(1.e-7) )]*2 + [(math.log10(3.), math.log10(7.e-8))]
+p3high = [(math.log10(6.),  math.log10(5.e-3) )]*2 + [(math.log10(3.), math.log10(2.e-5))]
+p3low  = [(math.log10(6.),  math.log10(1.e-7) )]*2 + [(math.log10(3.), math.log10(7.e-9))]
 
 
 def roundToN(x, n=2):
@@ -182,8 +182,8 @@ if __name__ == '__main__':
     print "Scanning model %s..."%model
     existingData = loadDataFile(model, root_dir_path)
     print 'Loaded %s previous data points.'%len(existingData)
-    data = makeSensitivityBelt(root_dir_path, existingData, model, 200, 150, verbose)
-    #data = makeSensitivityBelt(existingData, model, 4, 4, verbose)
+    #data = makeSensitivityBelt(root_dir_path, existingData, model, 200, 150, verbose)
+    data = makeSensitivityBelt(root_dir_path, existingData, model, 4, 4, verbose)
     #data3 = []
     existingData = convertToLog(existingData)
     data.extend(existingData)

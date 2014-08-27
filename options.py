@@ -4,7 +4,7 @@ import math
 import ROOT as r
 import numpy as np
 from array import array
-from scipy import interpolate
+#from scipy import interpolate
 import tauToN
 import NFromBMesons
 
@@ -806,49 +806,50 @@ class CKMmatrix():
 
 
 
-def interpNLifetime(infile):
-    """ DA SISTEMARE """
-    NM, Umu, points, lifetime = [], [], [], []
-    with open(infile,'r') as f:
-        for line in f:
-            line = line.split()
-            try:
-                val_NM = float(line[0])
-                val_Umu = float(line[1])
-                val_lifetime = float(line[2])
-                NM.append(roundToN(np.log10(val_NM),4))
-                Umu.append(roundToN(np.log10(val_Umu),4))
-                points.append((val_NM, val_Umu))
-                lifetime.append(np.log10(val_lifetime))
-            except:
-                continue
-    print len(NM), len(Umu), len(lifetime)
-    #NM, Umu, lifetime = zip(* sorted( zip(NM, Umu, lifetime), key=lambda x:(x[0], -x[1]) ) )
-    NM, Umu, lifetime = zip(* sorted( zip(NM, Umu, lifetime), key=lambda x:x[1] ) )
-    NM, Umu, lifetime = list(NM), list(Umu), list(lifetime)
-    NM, Umu, lifetime = zip(* sorted( zip(NM, Umu, lifetime), key=lambda x:x[0] ) )
-    NM, Umu, lifetime = list(NM), list(Umu), list(lifetime)
-    print NM[0], NM[-1]
-    print Umu[0], Umu[-1]
-    print lifetime[0], lifetime[-1]
-    #gridx, gridy = np.mgrid[NM[0]:NM[-1]:(np.fabs(NM[-1]-NM[0])/len(NM)), Umu[0]:Umu[-1]:(np.fabs(Umu[-1]-Umu[0])/len(Umu))]
-    #print gridx, gridy
-    #fun = interpolate.interp2d(NM, Umu, lifetime, kind='cubic')
-    #fun = interpolate.SmoothBivariateSpline(NM, Umu, lifetime)
-    #print Umu
-    griddedM = list(set(NM[:]))
-    print griddedM#, len(griddedM)
-    griddedUmu = list(set(Umu[:]))
-    print griddedUmu#, len(griddedUmu)
-    griddedLt = np.array(lifetime)
-    griddedLt = griddedLt.reshape(len(griddedM), len(griddedUmu))
-    print griddedLt.shape
-#    print len(set(NM)), len(set(Umu))
-    #grid = np.zeros(len(set(NM)), len(set(Umu)), 'f')
-#    grid[griddedM, griddedUmu] = griddedLt
-    fun = interpolate.RectBivariateSpline(griddedM, griddedUmu, griddedLt)
-    #griddedLF = interpolate.griddata((NM, Umu), lifetime, (gridx, gridy), method='cubic')
-    #print type(griddedLF), len(griddedLF), len(gridx), len(gridy)
-    ##fun = interpolate.interp2d(gridx, gridy, griddedLF)
-    #fun = interpolate.RectBivariateSpline(gridx, gridy, griddedLF)
-    return fun
+#def interpNLifetime(infile):
+#    """ DA SISTEMARE """
+#    NM, Umu, points, lifetime = [], [], [], []
+#    with open(infile,'r') as f:
+#        for line in f:
+#            line = line.split()
+#            try:
+#                val_NM = float(line[0])
+#                val_Umu = float(line[1])
+#                val_lifetime = float(line[2])
+#                NM.append(roundToN(np.log10(val_NM),4))
+#                Umu.append(roundToN(np.log10(val_Umu),4))
+#                points.append((val_NM, val_Umu))
+#                lifetime.append(np.log10(val_lifetime))
+#            except:
+#                continue
+#    print len(NM), len(Umu), len(lifetime)
+#    #NM, Umu, lifetime = zip(* sorted( zip(NM, Umu, lifetime), key=lambda x:(x[0], -x[1]) ) )
+#    NM, Umu, lifetime = zip(* sorted( zip(NM, Umu, lifetime), key=lambda x:x[1] ) )
+#    NM, Umu, lifetime = list(NM), list(Umu), list(lifetime)
+#    NM, Umu, lifetime = zip(* sorted( zip(NM, Umu, lifetime), key=lambda x:x[0] ) )
+#    NM, Umu, lifetime = list(NM), list(Umu), list(lifetime)
+#    print NM[0], NM[-1]
+#    print Umu[0], Umu[-1]
+#    print lifetime[0], lifetime[-1]
+#    #gridx, gridy = np.mgrid[NM[0]:NM[-1]:(np.fabs(NM[-1]-NM[0])/len(NM)), Umu[0]:Umu[-1]:(np.fabs(Umu[-1]-Umu[0])/len(Umu))]
+#    #print gridx, gridy
+#    #fun = interpolate.interp2d(NM, Umu, lifetime, kind='cubic')
+#    #fun = interpolate.SmoothBivariateSpline(NM, Umu, lifetime)
+#    #print Umu
+#    griddedM = list(set(NM[:]))
+#    print griddedM#, len(griddedM)
+#    griddedUmu = list(set(Umu[:]))
+#    print griddedUmu#, len(griddedUmu)
+#    griddedLt = np.array(lifetime)
+#    griddedLt = griddedLt.reshape(len(griddedM), len(griddedUmu))
+#    print griddedLt.shape
+##    print len(set(NM)), len(set(Umu))
+#    #grid = np.zeros(len(set(NM)), len(set(Umu)), 'f')
+##    grid[griddedM, griddedUmu] = griddedLt
+#    fun = interpolate.RectBivariateSpline(griddedM, griddedUmu, griddedLt)
+#    #griddedLF = interpolate.griddata((NM, Umu), lifetime, (gridx, gridy), method='cubic')
+#    #print type(griddedLF), len(griddedLF), len(gridx), len(gridy)
+#    ##fun = interpolate.interp2d(gridx, gridy, griddedLF)
+#    #fun = interpolate.RectBivariateSpline(gridx, gridy, griddedLF)
+#    return fun
+#
