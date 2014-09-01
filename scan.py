@@ -3,6 +3,8 @@ import sys
 import os
 import struct
 from HNLAcceptance import *
+from BauLimits import *
+
 
 ppp = physicsParameters()
 mTau = ppp.masses[ppp.name2particle['tau']]

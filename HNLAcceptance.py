@@ -131,6 +131,11 @@ def computeNEvents(model, mass, coupling, root_dir_path='/home/elena/Desktop/PhD
         BRprod += productionBR(pp, source, mod) * pp.U2[mod-1]/U2tot
 
     NEv = (accv1*weight1 + accv2*weight2)*2.*BRprod*hh.ep.protonFlux
+    #for dec in decList:
+    #    if decList[dec] == 'yes' and dec != 'N -> pi0 nu' and dec != 'N -> nu nu nu':
+    #        print dec, '\t', hh.pp.findBranchingRatio(dec), '\t\t', makeDecayInVolume(hh, dec, 1)[0], '\t', makeDecayInVolume(hh, dec, 2)[0]
+    #print accv1*weight1, accv2*weight2, BRprod
+
     #hh.weightedPDFoutfile.Close()
     #hh.prodPDFoutfile.Close()
     hh.sourceFile.Close()

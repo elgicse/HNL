@@ -1,0 +1,12 @@
+Attaching file SHiP-graphs-model1.root as _file0...
+Attaching file ship-complete/model1-1.e-11-1.e-6.root as _file0...
+ mgr = (TMultiGraph*)Canvas_1->GetPrimitive("mgr-model1")
+mgr->GetXaxis()->SetTitle("HNL mass (GeV)")
+mgr->GetXaxis()->CenterTitle()
+mgr->GetYaxis()->SetTitle("HNL coupling to SM U^{2}")
+mgr->GetYaxis()->CenterTitle()
+mgr->GetXaxis()->SetTitleSize(0.05)
+mgr->GetXaxis()->SetTitleOffset(0.8)
+mgr->GetYaxis()->SetTitleSize(0.05)
+mgr->GetYaxis()->SetTitleOffset(0.95)
+
