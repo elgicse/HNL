@@ -1,0 +1,84 @@
+@(#)CERN job starter $Date: 2010/06/23 14:22:16 $
+Working directory is </pool/lsf/egraveri/555523855> on <>
+
+
+ *** Break *** segmentation violation
+
+
+
+===========================================================
+There was a crash.
+This is the entire stack trace of all threads:
+===========================================================
+
+Thread 2 (Thread 0x2b9f9cded700 (LWP 9557)):
+#0  0x00002b9f89057930 in sem_wait () from /lib64/libpthread.so.0
+#1  0x00002b9f88d67528 in PyThread_acquire_lock () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#2  0x00002b9f88d22916 in PyEval_RestoreThread () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:357
+#3  0x00002b9f92f5d253 in time_sleep () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_68/Python/2.7.6/x86_64-slc6-gcc48-opt/lib/python2.7/lib-dynload/time.so
+#4  0x00002b9f88d280db in PyEval_EvalFrameEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:4021
+#5  0x00002b9f88d295dd in PyEval_EvalCodeEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:3253
+#6  0x00002b9f88ca4275 in function_call () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#7  0x00002b9f88c727a3 in PyObject_Call () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#8  0x00002b9f88d24966 in PyEval_EvalFrameEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:4334
+#9  0x00002b9f88d28b73 in PyEval_EvalFrameEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:4107
+#10 0x00002b9f88d28b73 in PyEval_EvalFrameEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:4107
+#11 0x00002b9f88d295dd in PyEval_EvalCodeEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:3253
+#12 0x00002b9f88ca41a0 in function_call () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#13 0x00002b9f88c727a3 in PyObject_Call () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#14 0x00002b9f88c8122d in instancemethod_call () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Objects/classobject.c:2602
+#15 0x00002b9f88c727a3 in PyObject_Call () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#16 0x00002b9f88d22f77 in PyEval_CallObjectWithKeywords () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:3890
+#17 0x00002b9f88d6cf12 in t_bootstrap () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#18 0x00002b9f890519d1 in start_thread () from /lib64/libpthread.so.0
+#19 0x00002b9f899dbb5d in clone () from /lib64/libc.so.6
+
+Thread 1 (Thread 0x2b9f89c88360 (LWP 5451)):
+#0  0x00002b9f8999f90d in waitpid () from /lib64/libc.so.6
+#1  0x00002b9f89931909 in do_system () from /lib64/libc.so.6
+#2  0x00002b9f89931c40 in system () from /lib64/libc.so.6
+#3  0x00002b9f965d3a28 in TUnixSystem::StackTrace() () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libCore.so
+#4  0x00002b9f965d28a3 in TUnixSystem::DispatchSignals(ESignals) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libCore.so
+#5  <signal handler called>
+#6  0x00002b9f9d3e3608 in TGraphSmooth::Smoothin(TGraph*) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libHist.so
+#7  0x00002b9f9d3e381b in TGraphSmooth::SmoothKern(TGraph*, char const*, double, int, double*) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libHist.so
+#8  0x00002b9f9d61829b in G__G__Hist_320_0_6(G__value*, char const*, G__param*, int) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libHist.so
+#9  0x00002b9f96d791af in Cint::G__CallFunc::Execute(void*) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libCint.so
+#10 0x00002b9f957b2969 in PyROOT::TRootObjectExecutor::Execute(Cint::G__CallFunc*, void*, bool) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libPyROOT.so
+#11 0x00002b9f957ba80b in PyROOT::TMethodHolder<PyROOT::TScopeAdapter, PyROOT::TMemberAdapter>::CallSafe(void*, bool) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libPyROOT.so
+#12 0x00002b9f957ba9d6 in PyROOT::TMethodHolder<PyROOT::TScopeAdapter, PyROOT::TMemberAdapter>::Execute(void*, bool) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libPyROOT.so
+#13 0x00002b9f957b81d6 in PyROOT::TMethodHolder<PyROOT::TScopeAdapter, PyROOT::TMemberAdapter>::operator()(PyROOT::ObjectProxy*, _object*, _object*, long, bool) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libPyROOT.so
+#14 0x00002b9f957bd253 in PyROOT::(anonymous namespace)::mp_call(PyROOT::MethodProxy*, _object*, _object*) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libPyROOT.so
+#15 0x00002b9f88c727a3 in PyObject_Call () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#16 0x00002b9f88d25291 in PyEval_EvalFrameEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:4239
+#17 0x00002b9f88d295dd in PyEval_EvalCodeEx () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:3253
+#18 0x00002b9f88d29712 in PyEval_EvalCode () at /build/tmp/build/externals/Python-2.7.6/src/Python/2.7.6/Python/ceval.c:667
+#19 0x00002b9f88d54272 in PyRun_FileExFlags () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#20 0x00002b9f88d557b9 in PyRun_SimpleFileExFlags () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#21 0x00002b9f88d6b1bd in Py_Main () from /cvmfs/lhcb.cern.ch/lib/lcg/releases/Python/2.7.6-31787/x86_64-slc6-gcc48-opt/bin/../lib/libpython2.7.so.1.0
+#22 0x00002b9f89911d1d in __libc_start_main () from /lib64/libc.so.6
+#23 0x00000000004006d9 in _start ()
+===========================================================
+
+
+The lines below might hint at the cause of the crash.
+If they do not help you then please submit a bug report at
+http://root.cern.ch/bugs. Please post the ENTIRE stack trace
+from above as an attachment in addition to anything else
+that might help us fixing this issue.
+===========================================================
+#6  0x00002b9f9d3e3608 in TGraphSmooth::Smoothin(TGraph*) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libHist.so
+#7  0x00002b9f9d3e381b in TGraphSmooth::SmoothKern(TGraph*, char const*, double, int, double*) () from /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/lib/libHist.so
+===========================================================
+
+
+Traceback (most recent call last):
+  File "/afs/cern.ch/work/e/egraveri/public/SHiP/HNL-Sensitivity-batch/sandbox/scan.py", line 260, in <module>
+    logGraphOut2 = logGraphSmoother2.SmoothKern(logGraphTemp)
+SystemError: problem in C++; program state has been reset
+
+Job finished at dom 17 ago 2014, 17.51.55, CEST on node 
+ under linux version Scientific Linux CERN SLC release 6.5 (Carbon)
+
+CERN statistics: This process used approximately : 0:00:09 KSI2K hours (9 KSI2K seconds)
+                 This process corresponds to     : 0:00:38 HS06  hours (38 HS06  seconds)

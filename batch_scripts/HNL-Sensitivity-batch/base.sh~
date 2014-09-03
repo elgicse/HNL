@@ -1,0 +1,25 @@
+# If not running interactively, don't do anything
+[[ $- == *i* ]] || return
+export PS1="\[\033[01;32m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\] "
+#"\\u@\h \\W]\\$"
+export RFIO_USE_CASTOR_V2=YES
+export STAGE_HOST=castorpublic
+
+#source /afs/cern.ch/lhcb/software/releases/LBSCRIPTS/prod/InstallArea/scripts/LbLogin.sh
+
+#alias ipython="/usr/bin/ipython"
+#alias 'ipython'='python2.6 -m IPython'
+export PYTHIA8=/afs/cern.ch/user/e/egraveri/pythia8186
+export PYTHIA8DATA=$PYTHIA8/xmldoc
+#export LD_LIBRARY_PATH=/afs/cern.ch/user/e/egraveri/my-root/root:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PYTHIA8/lib:$LD_LIBRARY_PATH
+
+source /afs/cern.ch/user/e/egraveri/my-root/root_5.34.20/bin/thisroot.sh
+#export PYTHONPATH=$ROOTSYS/lib:/afs/cern.ch/lhcb/software/releases/LBSCRIPTS/LBSCRIPTS_v7r10p4/InstallArea/python:/afs/cern.ch/user/e/egraveri/my-root/root/lib
+export PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
+
+#export LD_LIBRARY_PATH=$ROOTSYS/lib:$PYTHONDIR/lib:$LD_LIBRARY_PATH:/opt/rh/python27/root/usr/lib64
+export PYTHONDIR=/afs/cern.ch/sw/lcg/external/Python/2.7.3/x86_64-slc6-gcc48-opt
+export LD_LIBRARY_PATH=$ROOTSYS/lib:$PYTHONDIR/lib:$LD_LIBRARY_PATH
+
+alias cdwork="cd /afs/cern.ch/work/e/egraveri/public/SHiP"

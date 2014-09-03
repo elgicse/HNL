@@ -1,0 +1,11 @@
+@(#)CERN job starter $Date: 2010/06/23 14:22:16 $
+Working directory is </pool/lsf/egraveri/558298067> on <>
+
+Error in <TGClient::TGClient>: can't open display "lxplus0090.cern.ch:13.0", switching to batch mode...
+ In case you run from a remote ssh session, reconnect with ssh -Y
+
+Job finished at mar 26 ago 2014, 10.17.50, CEST on node 
+ under linux version Scientific Linux CERN SLC release 6.5 (Carbon)
+
+CERN statistics: This process used approximately : 0:34:49 KSI2K hours (2089 KSI2K seconds)
+                 This process corresponds to     : 2:15:48 HS06  hours (8148 HS06  seconds)

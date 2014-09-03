@@ -1,0 +1,52 @@
+Work directory is: /afs/cern.ch/work/e/egraveri/public/SHiP/HNL-Sensitivity-batch/sandbox
+Scanning model 1...
+Loaded 8920 previous data points.
+Scanning number of events on 11788 phase-space points
+Point 0 of 11788: 	 log10(mass) -0.99 	 log10(U2) -7.0 		 Events: 0.022
+Point 250 of 11788: 	 log10(mass) -0.96 	 log10(U2) -5.1 		 Events: 94.0
+Point 500 of 11788: 	 log10(mass) -0.91 	 log10(U2) -6.4 		 Events: 2.1
+Point 750 of 11788: 	 log10(mass) -0.88 	 log10(U2) -4.8 		 Events: 2900.0
+Point 1000 of 11788: 	 log10(mass) -0.84 	 log10(U2) -6.5 		 Events: 2.3
+Point 1250 of 11788: 	 log10(mass) -0.8 	 log10(U2) -5.3 		 Events: 1300.0
+Point 1500 of 11788: 	 log10(mass) -0.76 	 log10(U2) -7.4 		 Events: 0.29
+Point 1750 of 11788: 	 log10(mass) -0.72 	 log10(U2) -6.6 		 Events: 46.0
+Point 2000 of 11788: 	 log10(mass) -0.69 	 log10(U2) -5.9 		 Events: 3200.0
+Point 2250 of 11788: 	 log10(mass) -0.65 	 log10(U2) -5.3 		 Events: 51000.0
+Point 2500 of 11788: 	 log10(mass) -0.62 	 log10(U2) -4.9 		 Events: 700000.0
+Point 2750 of 11788: 	 log10(mass) -0.58 	 log10(U2) -7.9 		 Events: 3.0
+Point 3000 of 11788: 	 log10(mass) -0.54 	 log10(U2) -7.8 		 Events: 11.0
+Point 3250 of 11788: 	 log10(mass) -0.51 	 log10(U2) -7.8 		 Events: 12.0
+Point 3500 of 11788: 	 log10(mass) -0.47 	 log10(U2) -8.0 		 Events: 11.0
+Point 3750 of 11788: 	 log10(mass) -0.44 	 log10(U2) -8.3 		 Events: 4.0
+Point 4000 of 11788: 	 log10(mass) -0.41 	 log10(U2) -5.3 		 Events: 5700000.0
+Point 4250 of 11788: 	 log10(mass) -0.38 	 log10(U2) -6.0 		 Events: 390000.0
+Point 4500 of 11788: 	 log10(mass) -0.34 	 log10(U2) -6.7 		 Events: 22000.0
+Point 4750 of 11788: 	 log10(mass) -0.31 	 log10(U2) -7.6 		 Events: 860.0
+Point 5000 of 11788: 	 log10(mass) -0.27 	 log10(U2) -8.7 		 Events: 9.7
+Point 5250 of 11788: 	 log10(mass) -0.25 	 log10(U2) -6.1 		 Events: 1400000.0
+Point 5500 of 11788: 	 log10(mass) -0.21 	 log10(U2) -7.5 		 Events: 4000.0
+Point 5750 of 11788: 	 log10(mass) -0.18 	 log10(U2) -8.9 		 Events: 4.3
+Point 6000 of 11788: 	 log10(mass) -0.15 	 log10(U2) -6.8 		 Events: 230000.0
+Point 6250 of 11788: 	 log10(mass) -0.12 	 log10(U2) -8.5 		 Events: 120.0
+Point 6500 of 11788: 	 log10(mass) -0.091 	 log10(U2) -6.6 		 Events: 1100000.0
+Point 6750 of 11788: 	 log10(mass) -0.057 	 log10(U2) -8.6 		 Events: 180.0
+Point 7000 of 11788: 	 log10(mass) -0.031 	 log10(U2) -6.8 		 Events: 1300000.0
+Point 7250 of 11788: 	 log10(mass) 0.0041 	 log10(U2) -9.0 		 Events: 93.0
+Point 7500 of 11788: 	 log10(mass) 0.03 	 log10(U2) -7.4 		 Events: 8400000.0
+Point 7750 of 11788: 	 log10(mass) 0.056 	 log10(U2) -5.9 		 Events: 4000000000.0
+Point 8000 of 11788: 	 log10(mass) 0.091 	 log10(U2) -8.6 		 Events: 38000.0
+Point 8250 of 11788: 	 log10(mass) 0.12 	 log10(U2) -7.2 		 Events: 68000000.0
+Point 8500 of 11788: 	 log10(mass) 0.14 	 log10(U2) -6.0 		 Events: 4400000000.0
+Point 8750 of 11788: 	 log10(mass) 0.18 	 log10(U2) -8.9 		 Events: 53.0
+Point 9000 of 11788: 	 log10(mass) 0.2 	 log10(U2) -7.4 		 Events: 91000.0
+Point 9250 of 11788: 	 log10(mass) 0.24 	 log10(U2) -9.2 		 Events: 34.0
+Point 9500 of 11788: 	 log10(mass) 0.26 	 log10(U2) -6.6 		 Events: 2300000.0
+Point 9750 of 11788: 	 log10(mass) 0.3 	 log10(U2) -7.1 		 Events: 33.0
+Point 10000 of 11788: 	 log10(mass) 0.33 	 log10(U2) -6.7 		 Events: 180.0
+Point 10250 of 11788: 	 log10(mass) 0.37 	 log10(U2) -5.6 		 Events: 7100.0
+Point 10500 of 11788: 	 log10(mass) 0.41 	 log10(U2) -6.5 		 Events: 260.0
+Point 10750 of 11788: 	 log10(mass) 0.45 	 log10(U2) -6.3 		 Events: 230.0
+Point 11000 of 11788: 	 log10(mass) 0.5 	 log10(U2) -4.9 		 Events: 0.032
+Point 11250 of 11788: 	 log10(mass) 0.56 	 log10(U2) -6.4 		 Events: 28.0
+Point 11500 of 11788: 	 log10(mass) 0.62 	 log10(U2) -5.4 		 Events: 8.8e-07
+Point 11750 of 11788: 	 log10(mass) 0.7 	 log10(U2) -4.2 		 Events: 0.0

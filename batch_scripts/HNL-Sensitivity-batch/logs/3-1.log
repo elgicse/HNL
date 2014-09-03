@@ -1,0 +1,57 @@
+Work directory is: /afs/cern.ch/work/e/egraveri/public/SHiP/HNL-Sensitivity-batch/sandbox
+Scanning model 3...
+Loaded 12082 previous data points.
+Scanning number of events on 13144 phase-space points
+Point 0 of 13144: 	 log10(mass) -0.99 	 log10(U2) -7.0 		 Events: 4.1e-05
+Point 250 of 13144: 	 log10(mass) -0.96 	 log10(U2) -5.2 		 Events: 0.24
+Point 500 of 13144: 	 log10(mass) -0.92 	 log10(U2) -6.5 		 Events: 0.04
+Point 750 of 13144: 	 log10(mass) -0.89 	 log10(U2) -4.9 		 Events: 36.0
+Point 1000 of 13144: 	 log10(mass) -0.85 	 log10(U2) -6.6 		 Events: 0.019
+Point 1250 of 13144: 	 log10(mass) -0.82 	 log10(U2) -5.4 		 Events: 3.5
+Point 1500 of 13144: 	 log10(mass) -0.78 	 log10(U2) -7.5 		 Events: 0.00031
+Point 1750 of 13144: 	 log10(mass) -0.75 	 log10(U2) -6.6 		 Events: 0.054
+Point 2000 of 13144: 	 log10(mass) -0.72 	 log10(U2) -5.9 		 Events: 3.6
+Point 2250 of 13144: 	 log10(mass) -0.69 	 log10(U2) -5.2 		 Events: 140.0
+Point 2500 of 13144: 	 log10(mass) -0.65 	 log10(U2) -8.0 		 Events: 0.00058
+Point 2750 of 13144: 	 log10(mass) -0.62 	 log10(U2) -7.8 		 Events: 0.0025
+Point 3000 of 13144: 	 log10(mass) -0.59 	 log10(U2) -7.7 		 Events: 0.026
+Point 3250 of 13144: 	 log10(mass) -0.56 	 log10(U2) -7.7 		 Events: 0.053
+Point 3500 of 13144: 	 log10(mass) -0.53 	 log10(U2) -7.8 		 Events: 0.047
+Point 3750 of 13144: 	 log10(mass) -0.5 	 log10(U2) -8.1 		 Events: 0.032
+Point 4000 of 13144: 	 log10(mass) -0.46 	 log10(U2) -8.5 		 Events: 0.0071
+Point 4250 of 13144: 	 log10(mass) -0.43 	 log10(U2) -9.0 		 Events: 0.0007
+Point 4500 of 13144: 	 log10(mass) -0.41 	 log10(U2) -6.2 		 Events: 570.0
+Point 4750 of 13144: 	 log10(mass) -0.38 	 log10(U2) -7.0 		 Events: 23.0
+Point 5000 of 13144: 	 log10(mass) -0.35 	 log10(U2) -8.0 		 Events: 0.32
+Point 5250 of 13144: 	 log10(mass) -0.32 	 log10(U2) -9.0 		 Events: 0.0036
+Point 5500 of 13144: 	 log10(mass) -0.29 	 log10(U2) -6.6 		 Events: 290.0
+Point 5750 of 13144: 	 log10(mass) -0.26 	 log10(U2) -8.0 		 Events: 0.93
+Point 6000 of 13144: 	 log10(mass) -0.23 	 log10(U2) -9.4 		 Events: 0.0011
+Point 6250 of 13144: 	 log10(mass) -0.21 	 log10(U2) -7.3 		 Events: 32.0
+Point 6500 of 13144: 	 log10(mass) -0.18 	 log10(U2) -9.0 		 Events: 0.018
+Point 6750 of 13144: 	 log10(mass) -0.15 	 log10(U2) -7.0 		 Events: 190.0
+Point 7000 of 13144: 	 log10(mass) -0.12 	 log10(U2) -8.9 		 Events: 0.024
+Point 7250 of 13144: 	 log10(mass) -0.1 	 log10(U2) -7.1 		 Events: 230.0
+Point 7500 of 13144: 	 log10(mass) -0.069 	 log10(U2) -9.4 		 Events: 0.0066
+Point 7750 of 13144: 	 log10(mass) -0.045 	 log10(U2) -7.8 		 Events: 16.0
+Point 8000 of 13144: 	 log10(mass) -0.014 	 log10(U2) -10.0 		 Events: 0.00037
+Point 8250 of 13144: 	 log10(mass) 0.0089 	 log10(U2) -8.8 		 Events: 0.42
+Point 8500 of 13144: 	 log10(mass) 0.032 	 log10(U2) -7.4 		 Events: 480.0
+Point 8750 of 13144: 	 log10(mass) 0.063 	 log10(U2) -10.0 		 Events: 0.0012
+Point 9000 of 13144: 	 log10(mass) 0.086 	 log10(U2) -9.0 		 Events: 0.27
+Point 9250 of 13144: 	 log10(mass) 0.11 	 log10(U2) -8.0 		 Events: 60.0
+Point 9500 of 13144: 	 log10(mass) 0.14 	 log10(U2) -11.0 		 Events: 3.6e-05
+Point 9750 of 13144: 	 log10(mass) 0.16 	 log10(U2) -10.0 		 Events: 0.0033
+Point 10000 of 13144: 	 log10(mass) 0.19 	 log10(U2) -9.3 		 Events: 0.26
+Point 10250 of 13144: 	 log10(mass) 0.21 	 log10(U2) -8.1 		 Events: 77.0
+Point 10500 of 13144: 	 log10(mass) 0.24 	 log10(U2) -11.0 		 Events: 0.00045
+Point 10750 of 13144: 	 log10(mass) 0.26 	 log10(U2) -9.0 		 Events: 0.87
+Point 11000 of 13144: 	 log10(mass) 0.29 	 log10(U2) -7.3 		 Events: 0.24
+Point 11250 of 13144: 	 log10(mass) 0.32 	 log10(U2) -9.0 		 Events: 0.00012
+Point 11500 of 13144: 	 log10(mass) 0.34 	 log10(U2) -6.9 		 Events: 2.0
+Point 11750 of 13144: 	 log10(mass) 0.37 	 log10(U2) -8.1 		 Events: 0.0073
+Point 12000 of 13144: 	 log10(mass) 0.4 	 log10(U2) -9.2 		 Events: 6.6e-05
+Point 12250 of 13144: 	 log10(mass) 0.43 	 log10(U2) -6.3 		 Events: 29.0
+Point 12500 of 13144: 	 log10(mass) 0.46 	 log10(U2) -6.8 		 Events: 3.9
+Point 12750 of 13144: 	 log10(mass) 0.49 	 log10(U2) -7.0 		 Events: 3.2
+Point 13000 of 13144: 	 log10(mass) 0.52 	 log10(U2) -6.8 		 Events: 7.2

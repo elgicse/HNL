@@ -1,0 +1,15 @@
+@(#)CERN job starter $Date: 2010/06/23 14:22:16 $
+Working directory is </pool/lsf/egraveri/558844509> on <>
+
+Traceback (most recent call last):
+  File "/afs/cern.ch/work/e/egraveri/public/SHiP/HNL-Sensitivity-batch/sandbox/scan.py", line 185, in <module>
+    data = makeSensitivityBelt(root_dir_path, existingData, model, 2000, 1600, verbose)
+  File "/afs/cern.ch/work/e/egraveri/public/SHiP/HNL-Sensitivity-batch/sandbox/scan.py", line 107, in makeSensitivityBelt
+    gc.collect()
+KeyboardInterrupt
+
+Job finished at gio 28 ago 2014, 09.23.46, CEST on node 
+ under linux version Scientific Linux CERN SLC release 6.5 (Carbon)
+
+CERN statistics: This process used approximately : 35:52:54 KSI2K hours (129174 KSI2K seconds)
+                 This process corresponds to     : 139:56:22 HS06  hours (503782 HS06  seconds)

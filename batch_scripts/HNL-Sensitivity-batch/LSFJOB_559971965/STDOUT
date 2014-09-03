@@ -1,0 +1,13 @@
+@(#)CERN job starter $Date: 2010/06/23 14:22:16 $
+Working directory is </pool/lsf/egraveri/559971965> on <>
+
+  File "/afs/cern.ch/work/e/egraveri/public/SHiP/HNL-Sensitivity-batch/sandbox/scan.py", line 1
+    1;2802;0cfrom __future__ import division
+                ^
+SyntaxError: invalid syntax
+
+Job finished at sab 30 ago 2014, 11.11.30, CEST on node 
+ under linux version Scientific Linux CERN SLC release 6.5 (Carbon)
+
+CERN statistics: This process used approximately : 0:00:05 KSI2K hours (5 KSI2K seconds)
+                 This process corresponds to     : 0:00:22 HS06  hours (22 HS06  seconds)
