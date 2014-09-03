@@ -1,8 +1,6 @@
 from __future__ import division
-#import ROOT as r
 import numpy as np
 import gc
-#from neutrinoDecayAndBoost import *
 from saveHNLPdfs import *
 
 def makeDecayInVolume(hh, decayString, volume, statistic=100):
@@ -78,108 +76,57 @@ def HNLDecayChain(hh, decayString, pN):
 
 
 def computeNEvents(model, mass, coupling, root_dir_path='/home/elena/Desktop/PhD-Work/0-SHIP/HiddenParticlesSensitivity/SterileNeutrinos'):
-    """ Choose model 1, 2 or 3 """
+    """ Choose model 1, 2, 3, 4 or 5 """
     pp = physicsParameters(root_dir_path)
-    pp.setNMass(mass)
+    pp.setNMass(mass)                   
     # Check kinematics
-    leptons = [None, 'e', 'mu', 'tau']
-    if model == 3:
-        if pp.MN < (pp.masses['tau'] - pp.masses['e']):
-            source = 'charm'
-        elif pp.MN < (pp.masses['B'] - pp.masses['tau']):
-            source = 'beauty'
-        else:
-            return 0.
-    if model == 1 or model == 2:
-        if pp.MN < (pp.masses['Ds'] - pp.masses[leptons[model]]):
-            source = 'charm'
-        elif pp.MN < (pp.masses['B'] - pp.masses[leptons[model]]):
-            source = 'beauty'
-        else:
-            return 0.
-
-    if model == 1:
-        couplings = [coupling, pp.models[model-1][1]*coupling, pp.models[model-1][2]*coupling]
-    elif model == 2:
-        couplings = [pp.models[model-1][0]*coupling, coupling, pp.models[model-1][2]*coupling]
-    elif model == 3:
-        couplings = [pp.models[model-1][0]*coupling, pp.models[model-1][1]*coupling, coupling]
-    pp.setNCoupling(couplings)
+    sources = []
+    if pp.MN < max(pp.m_max['charm']):
+        sources.append('charm')
+    if pp.MN < max(pp.m_max['beauty']):
+        sources.append('beauty')
+    else:
+        return 0.
+    pp.setNCoupling([coupling*f for f in pp.models[model-1]])
     ep = experimentParams(pp, 'SHIP')
-    hh = HistoHandler(pp, ep, source, model)
-    hh.makeProductionPDF()
-    accv1, accv2 = hh.scaleProductionPDF(couplings)
-    decList = hh.pp.HNLAllowedDecays()
-    weight1 = 0.
-    weight2 = 0.
-    for dec in decList:
-        if decList[dec] == 'yes' and dec != 'N -> pi0 nu' and dec != 'N -> nu nu nu':
-            if accv1:
-                acc1, tot1 = makeDecayInVolume(hh, dec, 1)
-            else:
-                acc1 = 0.
-            if accv2:
-                acc2, tot2 = makeDecayInVolume(hh, dec, 2)
-            else:
-                acc2 = 0.
-            weight1 += hh.pp.findBranchingRatio(dec)*acc1
-            weight2 += hh.pp.findBranchingRatio(dec)*acc2
 
-    BRprod = 0.
-    U2tot = sum(pp.U2)
-    for mod in [1,2,3]:
-        BRprod += productionBR(pp, source, mod) * pp.U2[mod-1]/U2tot
+    BRprod = []
+    NEv = 0.
+    for source in sources:
+        hh = HistoHandler(pp, ep, source, model)
+        if hh.makeProductionPDF():
+            accv1, accv2 = hh.scaleProductionPDF(pp.U2)
+            decList = hh.pp.HNLAllowedDecays()
+            weight1 = 0.
+            weight2 = 0.
+            for dec in decList:
+                if decList[dec] == 'yes' and dec != 'N -> pi0 nu' and dec != 'N -> nu nu nu':
+                    if accv1:
+                        acc1, tot1 = makeDecayInVolume(hh, dec, 1)
+                    else:
+                        acc1 = 0.
+                    if accv2:
+                        acc2, tot2 = makeDecayInVolume(hh, dec, 2)
+                    else:
+                        acc2 = 0.
+                    weight1 += hh.pp.findBranchingRatio(dec)*acc1
+                    weight2 += hh.pp.findBranchingRatio(dec)*acc2
+            BRprod_s = 0.
+            U2tot = sum(pp.U2)
+            for flavour in [1,2,3]:
+                BRprod_s += productionBR(pp, source, flavour) * pp.U2[flavour-1]/U2tot
+            NEv += (accv1*weight1 + accv2*weight2)*2.*BRprod_s*hh.ep.protonFlux
+            BRprod.append(BRprod_s)
+        hh.sourceFile.Close()
 
-    NEv = (accv1*weight1 + accv2*weight2)*2.*BRprod*hh.ep.protonFlux
-    #for dec in decList:
-    #    if decList[dec] == 'yes' and dec != 'N -> pi0 nu' and dec != 'N -> nu nu nu':
-    #        print dec, '\t', hh.pp.findBranchingRatio(dec), '\t\t', makeDecayInVolume(hh, dec, 1)[0], '\t', makeDecayInVolume(hh, dec, 2)[0]
-    #print accv1*weight1, accv2*weight2, BRprod
-
-    #hh.weightedPDFoutfile.Close()
-    #hh.prodPDFoutfile.Close()
-    hh.sourceFile.Close()
     outFilePath = root_dir_path + "/out/TextData/sensitivityScan-HNL-model%s.txt"%(model)
     with open(outFilePath,"a") as ofile:
         try:
-            ofile.write('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s\n'%(mass, coupling, hh.pp.computeNProdBR(model-1),
-                accv1, accv2, weight1, weight2, NEv))
+            ofile.write('%s \t %s \t %s \t %s\n'%(mass, coupling, sum(BRprod), NEv))
         except KeyboardInterrupt:
             pass
     return NEv
 
-
-def productionBR(pp, source, model):
-    leptons = [None, 'e', 'mu', 'tau']
-    BR = 0.
-    if source == 'charm':
-        BR0 = pp.Xcc
-        if model == 3:
-            BR0 *= (pp.nDs/pp.nTotCharm)*pp.BRDsToTau
-            if pp.MN < (pp.masses['tau'] - pp.masses['e']):
-                BR += BR0*tauToN.brTauToNuEllN(pp,'e')
-            if pp.MN < (pp.masses['tau'] - pp.masses['mu']):
-                BR += BR0*tauToN.brTauToNuEllN(pp,'mu')
-            if pp.MN < (pp.masses['tau'] - pp.masses['pi']):
-                BR += BR0*tauToN.brTauToPiN(pp)
-        else:
-            if pp.MN < (pp.masses['Ds']-pp.masses[leptons[model]]):
-                BR += BR0*(pp.nDs/pp.nTotCharm) * NFromBMesons.BR2Body(pp,'Ds',leptons[model])
-            if pp.MN < (pp.masses['D0']-pp.masses['K']-pp.masses[leptons[model]]):
-                BR += BR0*(pp.nD0/pp.nTotCharm) * NFromBMesons.BR3Body(pp,'D0',leptons[model])
-            if pp.MN < (pp.masses['D']-pp.masses['K0']-pp.masses[leptons[model]]):
-                BR += BR0*(pp.nD/pp.nTotCharm) * NFromBMesons.BR3Body(pp,'D',leptons[model])
-    elif source == 'beauty':
-        BR0 = pp.Xbb
-        if pp.MN < (pp.masses['B'] - pp.masses[leptons[model]]):
-            BR += BR0*(pp.nB/pp.nTotBeauty) * NFromBMesons.BR2Body(pp, 'B', leptons[model])
-        if pp.MN < (pp.masses['B'] - pp.masses[leptons[model]] - pp.masses['D0']):
-            BR += BR0*(pp.nB/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'B', leptons[model])
-        if pp.MN < (pp.masses['B0'] - pp.masses[leptons[model]] - pp.masses['D']):
-            BR += BR0*(pp.nB0/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'B0', leptons[model])
-        if pp.MN < (pp.masses['Bs'] - pp.masses[leptons[model]] - pp.masses['Ds']):
-            BR += BR0*(pp.nBs/pp.nTotBeauty) * NFromBMesons.BR3Body(pp, 'Bs', leptons[model])
-    return BR
 
 
 

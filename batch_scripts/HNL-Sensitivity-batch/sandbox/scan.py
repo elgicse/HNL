@@ -7,19 +7,19 @@ from BauLimits import *
 
 
 ppp = physicsParameters()
-mTau = ppp.masses[ppp.name2particle['tau']]
-mMu = ppp.masses[ppp.name2particle['mu']]
-mDs = ppp.masses[ppp.name2particle['Ds']]
-me = ppp.masses[ppp.name2particle['e']]
+mTau = ppp.masses['tau']
+mMu = ppp.masses['mu']
+mDs = ppp.masses['Ds']
+me = ppp.masses['e']
 mB = ppp.masses['B']
 
-start = [math.log10(0.1)]*3 #GeV
+start = [math.log10(0.1)]*5 #GeV
 #start = [math.log10(6.e-03)]*3
 #stop = [math.log10(mDs-mMu), math.log10(mDs-mMu), math.log10(mTau-mMu)]
-stop = [math.log10(mB-me), math.log10(mB-mMu), math.log10(mB-mTau)]
+stop = [math.log10(mB-me), math.log10(mB-mMu), math.log10(mB-mTau), math.log10(mB-me), math.log10(mB-me)]
 
-y_start = [math.log10(1.e-12)]*3
-y_stop = [math.log10(1.e-4)]*3
+y_start = [math.log10(1.e-12)]*5
+y_stop = [math.log10(1.e-4)]*5
 
 #yStart = [[math.log10(5.e-06), math.log10(1.e-07)]]*3 #model 3
 #yStop = [[math.log10(1.e-09), math.log10(5.e-11)-1]]*3 #model 3
@@ -53,12 +53,12 @@ def Vline(model,p1,p2,p3,x):
     return y
 
 
-p1high = [(math.log10(0.1), math.log10(7.e-5) )]*3
-p1low  = [(math.log10(0.1), math.log10(1.e-7) )]*3
-p2high = [(math.log10(1.5), math.log10(3.e-8) )]*2 + [(math.log10(1.5), math.log10(1.e-6))]
-p2low  = [(math.log10(1.5), math.log10(2.e-12))]*2 + [(math.log10(1.5), math.log10(8.e-11))]
-p3high = [(math.log10(6.),  math.log10(5.e-3) )]*2 + [(math.log10(3.), math.log10(2.e-5))]
-p3low  = [(math.log10(6.),  math.log10(1.e-7) )]*2 + [(math.log10(3.), math.log10(7.e-9))]
+p1high = [(math.log10(0.1), math.log10(7.e-5) )]*5
+p1low  = [(math.log10(0.1), math.log10(1.e-7) )]*5
+p2high = [(math.log10(1.5), math.log10(3.e-8) )]*2 + [(math.log10(1.5), math.log10(1.e-6))] + [(math.log10(1.5), math.log10(3.e-8) )] + [(math.log10(1.5), math.log10(1.e-6))]
+p2low  = [(math.log10(1.5), math.log10(2.e-12))]*2 + [(math.log10(1.5), math.log10(8.e-11))]+ [(math.log10(1.5), math.log10(2.e-12))]*2
+p3high = [(math.log10(6.),  math.log10(5.e-3) )]*2 + [(math.log10(3.), math.log10(2.e-5))]  + [(math.log10(6.),  math.log10(5.e-3) )] + [(math.log10(3.), math.log10(2.e-5))]
+p3low  = [(math.log10(6.),  math.log10(1.e-7) )]*2 + [(math.log10(3.), math.log10(7.e-9))]  + [(math.log10(6.),  math.log10(1.e-7) )]*2
 
 
 def roundToN(x, n=2):

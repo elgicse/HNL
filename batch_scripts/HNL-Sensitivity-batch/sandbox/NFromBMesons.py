@@ -7,12 +7,12 @@ indx = {'e':0, 'mu':1, 'tau':2}
 
 def BR2Body(pp, meson, lepton):
     if meson == 'B':
-        MH = pp.masses[pp.name2particle['B']]
+        MH = pp.masses['B']
         V = pp.CKM.Vub
         tau = pp.tauB
         f = pp.fB
     elif meson == 'Ds':
-        MH = pp.masses[pp.name2particle['Ds']]
+        MH = pp.masses['Ds']
         V = pp.CKM.Vcs
         tau = pp.tauDs
         f = pp.fDs
@@ -20,7 +20,7 @@ def BR2Body(pp, meson, lepton):
         print 'BR2Body: select B or Ds!'
         sys.exit(-1)
     alpha = indx[lepton]
-    phsp = pp.phsp2body(MH, pp.MN, pp.masses[pp.name2particle[lepton]])
+    phsp = pp.phsp2body(MH, pp.MN, pp.masses[lepton])
     const = (tau/pp.hGeV) * pp.GF**2. * f**2. * MH * pp.MN**2. * pp.U2[alpha] * V**2. / (8. * math.pi)
     br = phsp*const*2. #majorana -> x2
     return br
@@ -59,7 +59,7 @@ def BR3Body(pp, meson, lepton): #only pseudoscalar into pseudoscalars (no B -> D
     else:
         print 'BR3Body: unknown meson!'
         sys.exit(-1)
-    phsp = pp.Integrate3Body(family, MH, Mh, pp.MN, pp.masses[pp.name2particle[lepton]], nToys=300)
+    phsp = pp.Integrate3Body(family, MH, Mh, pp.MN, pp.masses[lepton], nToys=300)
     #print 'Phase space is: %s'%phsp
     const = (tau/pp.hGeV) * pp.U2[alpha] * V**2. * pp.GF**2. / (64. * math.pi**3. * MH**2.)
     br = phsp*const*2.*2. #majorana -> x2, vector channels -> x2

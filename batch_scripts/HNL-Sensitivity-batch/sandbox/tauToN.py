@@ -6,8 +6,8 @@ from options import *
 def phsp2bodyTauToN(pp):
     # Assuming the hadron is a pion
     MN = pp.MN
-    MTau = pp.masses[pp.name2particle['tau']]
-    MPi = pp.masses[pp.name2particle['pi']]
+    MTau = pp.masses['tau']
+    MPi = pp.masses['pi']
     if MN*(MN+2.*MPi) > (MTau**2. - MPi**2.):
         return 0.
     p1 = ( (1. - MN**2./MTau**2.)**2. - (MPi**2./MTau**2.)*(1. + MN**2./MTau**2.) )
@@ -20,8 +20,8 @@ def phsp3bodyTauToN(EN, pp, lepton):
     MN = pp.MN
     if EN<MN:
         return 0.
-    MTau = pp.masses[pp.name2particle['tau']]
-    ML = pp.masses[pp.name2particle[lepton]]
+    MTau = pp.masses['tau']
+    ML = pp.masses[lepton]
     if EN>MTau-ML:
         return 0.
     #if EN > MTau/2.:
@@ -34,8 +34,8 @@ def phsp3bodyTauToN(EN, pp, lepton):
     return math.fabs(p1*p2*(p3-p4))
 
 def EMax3body(pp, lepton):
-    MTau = pp.masses[pp.name2particle['tau']]
-    ML = pp.masses[pp.name2particle[lepton]]
+    MTau = pp.masses['tau']
+    ML = pp.masses[lepton]
     MN = pp.MN
     PNMax = (0.5/MTau) * math.sqrt( (MTau**2. - (ML+MN)**2.) * (MTau**2. - (ML-MN)**2.) )
     ENMax = math.sqrt( MN**2. + PNMax**2. )
@@ -45,35 +45,29 @@ def EMax3body(pp, lepton):
 
 def integrate3bodyTauToN(pp, lepton):
     EMin = pp.MN
-    #EMax = pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle[lepton]]
-    #EMax = math.sqrt(((EMax**2-pp.MN**2)/2.)**2+pp.MN**2)
-
-    #EMax = pp.masses[pp.name2particle['tau']] * 0.5
     EMax = EMax3body(pp,lepton)
     if EMin >= EMax:
         return 0.
-    #print EMin, EMax
     integral = quad(phsp3bodyTauToN,
         EMin, EMax,
         args=(pp, lepton),
         full_output=True)
-    #print integral
     return integral[0]
 
 def brTauToPiN(pp):
     # Assuming the hadron is a pion
-    if pp.MN >= (pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle['pi']]):
+    if pp.MN >= (pp.masses['tau'] - pp.masses['pi']):
         return 0.
-    const = (pp.tauTau/pp.hGeV) * pp.U2[2] * pp.GF**2. * pp.CKM.Vud**2. * pp.fpi**2. * pp.masses[pp.name2particle['tau']]**3. * (1./(16.*math.pi))
+    const = (pp.tauTau/pp.hGeV) * pp.U2[2] * pp.GF**2. * pp.CKM.Vud**2. * pp.fpi**2. * pp.masses['tau']**3. * (1./(16.*math.pi))
     ps = phsp2bodyTauToN(pp)
-    return const*ps*2. #majorana
+    return const*ps*2.  # Generally speaking, I'm taking just half of the tau decays
 
 def brTauToNuEllN(pp, lepton):
-    if pp.MN >= (pp.masses[pp.name2particle['tau']] - pp.masses[pp.name2particle[lepton]]):
+    if pp.MN >= (pp.masses['tau'] - pp.masses[lepton]):
         return 0.
-    const = (pp.tauTau/pp.hGeV) * pp.U2[2] * pp.GF**2. * pp.masses[pp.name2particle['tau']]**2. * (1./(4.*math.pi**3.))
+    const = (pp.tauTau/pp.hGeV) * pp.U2[2] * pp.GF**2. * pp.masses['tau']**2. * (1./(4.*math.pi**3.))
     ps = integrate3bodyTauToN(pp, lepton)
-    return const*ps*2. #majorana
+    return const*ps*2. # Generally speaking, I'm taking just half of the tau decays
 
 
 

@@ -5,8 +5,8 @@ from options import *
 class HistoHandler():
     """ Manage PDFs for sterile neutrino production and decay """
     def __init__(self, pp, ep, source, model, binsp = 200, binstheta = 100):
-        if (model != 1) and (model != 2) and (model != 3):
-            print 'HistoHandler: select model 1, 2 or 3. Aborting.'
+        if (model not in [1,2,3,4,5]):
+            print 'HistoHandler: select model 1, 2, 3, 4 or 5. Aborting.'
             sys.exit(-1)
         # Setup input
         self.pp = pp
@@ -15,13 +15,6 @@ class HistoHandler():
         self.model = model
         self.source = source
         self.ev = myNEvent(self.pp)
-        
-        if self.model == 1:
-            self.lepton = 'e'
-        elif self.model == 2:
-            self.lepton = 'mu'
-        elif self.model == 3:
-            self.lepton = 'tau'
 
         if self.source == 'charm':
             self.sourceFile = r.TFile(self.pp.root_dir_path+'/'+self.pp.charmSourceFile, 'read')
@@ -54,92 +47,92 @@ class HistoHandler():
         self.prodHist.GetYaxis().SetTitle("#theta_{N} [rad]")
         pCharm, pB = r.TLorentzVector(), r.TLorentzVector()
 
-        if self.source == 'charm':
-            #print 'Found %s charms'%self.sourceTree.GetEntries()
-            if self.model == 3:
-                # With Utau dominating, the main source of N are taus from Ds
-                for ch in self.sourceTree:
-                    #pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
-                    pCharm.SetXYZT(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
-                    if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['tau'] - self.pp.masses['e']):
-                        self.ev.production.readString('Ds -> nu tau')
-                        self.ev.production.setPMother(pCharm)
-                        pKid1, pKid2 = self.ev.production.makeDecay()
-                        pTau = r.TLorentzVector(pKid2)
-                        self.ev.production.readString('tau -> e N nu')
-                        self.ev.production.setPMother(pTau)
-                        pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
-                        self.prodHist.Fill(pKid2.P(), pKid2.Theta())
-            elif self.model == 1 or self.model == 2:
-                # I take a reference BR (Ds->Nl) and rescale the contributions to the pdf accordingly for the other channels.
-                wds = NFromBMesons.BR2Body(self.pp, 'Ds', self.lepton)
-                wd = NFromBMesons.BR3Body(self.pp, 'D', self.lepton)
-                wd0 = NFromBMesons.BR3Body(self.pp, 'D0', self.lepton)
-                for ch in self.sourceTree:
-                    #pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
-                    pCharm.SetXYZT(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
-                    if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['Ds']-self.pp.masses[self.lepton]):
-                        self.ev.production.readString('Ds -> '+self.lepton+' N')
-                        self.ev.production.setPMother(pCharm)
-                        pKid1, pKid2 = self.ev.production.makeDecay()
-                        self.prodHist.Fill(pKid2.P(), pKid2.Theta())
-                    elif ch.CharmPID == self.pp.particle2id['D'] and self.pp.MN < (self.pp.masses['D']-self.pp.masses['K0']-self.pp.masses[self.lepton]):
-                        self.ev.production.readString('D -> K0 '+self.lepton+' N')
-                        self.ev.production.setPMother(pCharm)
-                        pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
-                        self.prodHist.Fill(pKid3.P()*wd/wds, pKid3.Theta()*wd/wds)
-                    elif ch.CharmPID == self.pp.particle2id['D0'] and self.pp.MN < (self.pp.masses['D0']-self.pp.masses['K']-self.pp.masses[self.lepton]):
-                        self.ev.production.readString('D0 -> K '+self.lepton+' N')
-                        self.ev.production.setPMother(pCharm)
-                        pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
-                        self.prodHist.Fill(pKid3.P()*wd0/wds, pKid3.Theta()*wd0/wds)
+        #SCALE = 1.#pow(1./max(self.pp.U2),1.) # un ce la fa!!!!!!!!
 
+        for flavour in xrange(3):
+            if self.source == 'charm' and self.pp.MN < self.pp.m_max[self.source][flavour]:
+                if flavour == 2:
+                    # With Utau, the main source of N are taus from Ds
+                    wf = productionBR(self.pp, self.source, flavour)
+                    for ch in self.sourceTree:
+                        pCharm.SetXYZT(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                        if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['tau'] - self.pp.masses['e']):
+                            self.ev.production.readString('Ds -> nu tau')
+                            self.ev.production.setPMother(pCharm)
+                            pKid1, pKid2 = self.ev.production.makeDecay()
+                            pTau = r.TLorentzVector(pKid2)
+                            self.ev.production.readString('tau -> e N nu')
+                            self.ev.production.setPMother(pTau)
+                            pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
+                            self.prodHist.Fill(pKid2.P(), pKid2.Theta(), wf)
+                elif (flavour == 0 or flavour == 1):
+                    wds = NFromBMesons.BR2Body(self.pp, 'Ds', self.pp.leptons[flavour])
+                    wd = NFromBMesons.BR3Body(self.pp, 'D', self.pp.leptons[flavour])
+                    wd0 = NFromBMesons.BR3Body(self.pp, 'D0', self.pp.leptons[flavour])
+                    for ch in self.sourceTree:
+                        pCharm.SetXYZT(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                        if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['Ds']-self.pp.masses[self.pp.leptons[flavour]]):
+                            self.ev.production.readString('Ds -> '+self.pp.leptons[flavour]+' N')
+                            self.ev.production.setPMother(pCharm)
+                            pKid1, pKid2 = self.ev.production.makeDecay()
+                            self.prodHist.Fill(pKid2.P(), pKid2.Theta(), wds)
+                        elif ch.CharmPID == self.pp.particle2id['D'] and self.pp.MN < (self.pp.masses['D']-self.pp.masses['K0']-self.pp.masses[self.pp.leptons[flavour]]):
+                            self.ev.production.readString('D -> K0 '+self.pp.leptons[flavour]+' N')
+                            self.ev.production.setPMother(pCharm)
+                            pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
+                            self.prodHist.Fill(pKid3.P(), pKid3.Theta(), wd)
+                        elif ch.CharmPID == self.pp.particle2id['D0'] and self.pp.MN < (self.pp.masses['D0']-self.pp.masses['K']-self.pp.masses[self.pp.leptons[flavour]]):
+                            self.ev.production.readString('D0 -> K '+self.pp.leptons[flavour]+' N')
+                            self.ev.production.setPMother(pCharm)
+                            pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
+                            self.prodHist.Fill(pKid3.P(), pKid3.Theta(), wd0)
 
-        elif self.source == 'beauty':
-            #print 'Found %s bs'%self.sourceTree.GetEntries()
-            wb2 = NFromBMesons.BR2Body(self.pp, 'B', self.lepton)
-            wb3 = NFromBMesons.BR3Body(self.pp, 'B', self.lepton)
-            # I take a reference BR (B->NX) and rescale the contributions to the pdf accordingly for the other channels.
-            wb = wb2+wb3
-            wb0 = NFromBMesons.BR3Body(self.pp, 'B0', self.lepton)
-            wbs = NFromBMesons.BR3Body(self.pp, 'Bs', self.lepton)
-            for b in self.sourceTree:
-                #pB = r.TLorentzVector(b.BeautyPx, b.BeautyPy, b.BeautyPz, b.BeautyE)
-                pB.SetXYZT(b.BeautyPx, b.BeautyPy, b.BeautyPz, b.BeautyE)
-                # B+- can go 2body or 3body
-                if b.BeautyPID == self.pp.particle2id['B'] and (self.pp.masses['B'] - self.pp.masses[self.lepton] - self.pp.masses['D0']) <= self.pp.MN < (self.pp.masses['B'] - self.pp.masses[self.lepton]):
-                    self.ev.production.readString('B -> '+self.lepton+' N')
-                    self.ev.production.setPMother(pB)
-                    pKid1, pKid2 = self.ev.production.makeDecay()
-                    self.prodHist.Fill(pKid2.P(), pKid2.Theta())                    
-                elif b.BeautyPID == self.pp.particle2id['B'] and self.pp.MN < (self.pp.masses['B'] - self.pp.masses[self.lepton] - self.pp.masses['D0']):
-                    self.ev.production.readString('B -> '+self.lepton+' N')
-                    self.ev.production.setPMother(pB)
-                    pKid1, pKid2 = self.ev.production.makeDecay()
-                    p2body = r.TLorentzVector(pKid2)
-                    self.ev.production.readString('B -> D0 '+self.lepton+' N')
-                    self.ev.production.setPMother(pB)
-                    pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
-                    p3body = r.TLorentzVector(pKid3)
-                    pdfP = p2body.P()*wb2/(wb2+wb3) + p3body.P()*wb3/(wb2+wb3)
-                    pdfTheta = p2body.Theta()*wb2/(wb2+wb3) + p3body.Theta()*wb3/(wb2+wb3)
-                    self.prodHist.Fill(pdfP, pdfTheta)
-                # B0 goes 3body
-                elif b.BeautyPID == self.pp.particle2id['B0'] and self.pp.MN < (self.pp.masses['B0'] - self.pp.masses[self.lepton] - self.pp.masses['D']):
-                    self.ev.production.readString('B0 -> D '+self.lepton+' N')
-                    self.ev.production.setPMother(pB)
-                    pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
-                    self.prodHist.Fill(pKid3.P()*wb0/wb, pKid3.Theta()*wb0/wb)
-                # Bs goes 3body
-                elif b.BeautyPID == self.pp.particle2id['Bs'] and self.pp.MN < (self.pp.masses['Bs'] - self.pp.masses[self.lepton] - self.pp.masses['Ds']):
-                    self.ev.production.readString('Bs -> Ds '+self.lepton+' N')
-                    self.ev.production.setPMother(pB)
-                    pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
-                    self.prodHist.Fill(pKid3.P()*wbs/wb, pKid3.Theta()*wbs/wb)
+            elif self.source == 'beauty' and self.pp.MN < self.pp.m_max[self.source][flavour]:
+                wb2 = NFromBMesons.BR2Body(self.pp, 'B', self.pp.leptons[flavour])
+                wb3 = NFromBMesons.BR3Body(self.pp, 'B', self.pp.leptons[flavour])
+                # I take a reference BR (B->NX) and rescale the contributions to the pdf accordingly for the other channels.
+                wb = wb2+wb3
+                wb0 = NFromBMesons.BR3Body(self.pp, 'B0', self.pp.leptons[flavour])
+                wbs = NFromBMesons.BR3Body(self.pp, 'Bs', self.pp.leptons[flavour])
+                for b in self.sourceTree:
+                    pB.SetXYZT(b.BeautyPx, b.BeautyPy, b.BeautyPz, b.BeautyE)
+                    # B+- can go 2body or 3body
+                    if b.BeautyPID == self.pp.particle2id['B'] and (self.pp.masses['B'] - self.pp.masses[self.pp.leptons[flavour]] - self.pp.masses['D0']) <= self.pp.MN < (self.pp.masses['B'] - self.pp.masses[self.pp.leptons[flavour]]):
+                        self.ev.production.readString('B -> '+self.pp.leptons[flavour]+' N')
+                        self.ev.production.setPMother(pB)
+                        pKid1, pKid2 = self.ev.production.makeDecay()
+                        self.prodHist.Fill(pKid2.P(), pKid2.Theta(), wb2)  
+                    elif b.BeautyPID == self.pp.particle2id['B'] and self.pp.MN < (self.pp.masses['B'] - self.pp.masses[self.pp.leptons[flavour]] - self.pp.masses['D0']):
+                        self.ev.production.readString('B -> '+self.pp.leptons[flavour]+' N')
+                        self.ev.production.setPMother(pB)
+                        pKid1, pKid2 = self.ev.production.makeDecay()
+                        p2body = r.TLorentzVector(pKid2)
+                        self.ev.production.readString('B -> D0 '+self.pp.leptons[flavour]+' N')
+                        self.ev.production.setPMother(pB)
+                        pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
+                        p3body = r.TLorentzVector(pKid3)
+                        #pdfP = p2body.P()*wb2 + p3body.P()*wb3
+                        #pdfTheta = p2body.Theta()*wb2 + p3body.Theta()*wb3
+                        self.prodHist.Fill(p2body.P(), p2body.Theta(), wb2)
+                        self.prodHist.Fill(p3body.P(), p3body.Theta(), wb3)
+                    # B0 goes 3body
+                    elif b.BeautyPID == self.pp.particle2id['B0'] and self.pp.MN < (self.pp.masses['B0'] - self.pp.masses[self.pp.leptons[flavour]] - self.pp.masses['D']):
+                        self.ev.production.readString('B0 -> D '+self.pp.leptons[flavour]+' N')
+                        self.ev.production.setPMother(pB)
+                        pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
+                        self.prodHist.Fill(pKid3.P(), pKid3.Theta(), wb0)
+                    # Bs goes 3body
+                    elif b.BeautyPID == self.pp.particle2id['Bs'] and self.pp.MN < (self.pp.masses['Bs'] - self.pp.masses[self.pp.leptons[flavour]] - self.pp.masses['Ds']):
+                        self.ev.production.readString('Bs -> Ds '+self.pp.leptons[flavour]+' N')
+                        self.ev.production.setPMother(pB)
+                        pKid1, pKid2, pKid3 = self.ev.production.makeDecay()
+                        self.prodHist.Fill(pKid3.P(), pKid3.Theta(), wbs)
 
         # Make it a PDF
         histInt = self.prodHist.Integral("width")
-        self.prodHist.Scale(1./histInt)
+        if histInt:
+            self.prodHist.Scale(1./histInt)
+        return histInt
         #self.prodPDFfilename = self.pp.root_dir_path+'/'+'out/NTuples/prodPDF_m%s_model%s.root'%(self.pp.MN,self.model)
         #self.prodPDFoutfile = r.TFile(self.prodPDFfilename,'recreate')
         #self.prodHist.Write("",5)
@@ -194,6 +187,7 @@ class HistoHandler():
         #    self.weightedProdHistVol2.Write("",5)
         #else:
         #    self.accVol1, self.accVol2 = 0., 0.
+        self.prodHist.Delete()
         if self.accVol1 < 1.e-20 and self.accVol2 < 1.e-20:
             self.accVol1, self.accVol2 = 0., 0.
         return self.accVol1, self.accVol2
