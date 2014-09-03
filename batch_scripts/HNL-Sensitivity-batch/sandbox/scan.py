@@ -3,6 +3,8 @@ import sys
 import os
 import struct
 from HNLAcceptance import *
+from BauLimits import *
+
 
 ppp = physicsParameters()
 mTau = ppp.masses[ppp.name2particle['tau']]
@@ -59,7 +61,7 @@ p3high = [(math.log10(6.),  math.log10(5.e-3) )]*2 + [(math.log10(3.), math.log1
 p3low  = [(math.log10(6.),  math.log10(1.e-7) )]*2 + [(math.log10(3.), math.log10(7.e-9))]
 
 
-def roundToN(x, n=3):
+def roundToN(x, n=2):
     if x:
         result = round(x, -int(math.floor(math.log10(math.fabs(x)))) + (n - 1))
     else:
@@ -159,7 +161,7 @@ def convertToLog(data):
             roundToN(datum[2]) ) )
     return converted
 
-def eq(n1, n2, toll = 1.e-02):
+def eq(n1, n2, toll = 1.e-01):
     if math.fabs(n2-n1) < toll*math.fabs(n2):
         return True
     return False
@@ -183,7 +185,7 @@ if __name__ == '__main__':
     existingData = loadDataFile(model, root_dir_path)
     print 'Loaded %s previous data points.'%len(existingData)
     #data = []
-    data = makeSensitivityBelt(root_dir_path, existingData, model, 2000, 1600, verbose)
+    data = makeSensitivityBelt(root_dir_path, existingData, model, 1000, 800, verbose)
     #data = makeSensitivityBelt(root_dir_path, existingData, model, 4, 4, verbose)
     existingData = convertToLog(existingData)
     data.extend(existingData)

@@ -1,4 +1,5 @@
 from __future__ import division
+import ROOT as r
 from options import *
 
 class HistoHandler():
@@ -41,6 +42,7 @@ class HistoHandler():
         self.tmax = self.ep.v1ThetaMax
         self.tmin = 0.
         self.thetaStep = (self.tmax-self.tmin)/self.binstheta
+        #self.pMax = math.sqrt(self.ep.protonEnergy**2. - self.pp.MN**2.)
         self.pMax = 150.
         self.pMin = self.pp.MN
         self.pStep = (self.pMax-self.pMin)/self.binsp
@@ -50,13 +52,15 @@ class HistoHandler():
         self.prodHist.SetTitle("PDF for N production (m_{N}=%s GeV, model %s)"%(self.pp.MN, self.model))
         self.prodHist.GetXaxis().SetTitle("P_{N} [GeV]")
         self.prodHist.GetYaxis().SetTitle("#theta_{N} [rad]")
+        pCharm, pB = r.TLorentzVector(), r.TLorentzVector()
 
         if self.source == 'charm':
             #print 'Found %s charms'%self.sourceTree.GetEntries()
             if self.model == 3:
                 # With Utau dominating, the main source of N are taus from Ds
                 for ch in self.sourceTree:
-                    pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                    #pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                    pCharm.SetXYZT(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
                     if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['tau'] - self.pp.masses['e']):
                         self.ev.production.readString('Ds -> nu tau')
                         self.ev.production.setPMother(pCharm)
@@ -72,7 +76,8 @@ class HistoHandler():
                 wd = NFromBMesons.BR3Body(self.pp, 'D', self.lepton)
                 wd0 = NFromBMesons.BR3Body(self.pp, 'D0', self.lepton)
                 for ch in self.sourceTree:
-                    pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                    #pCharm = r.TLorentzVector(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
+                    pCharm.SetXYZT(ch.CharmPx, ch.CharmPy, ch.CharmPz, ch.CharmE)
                     if ch.CharmPID == self.pp.particle2id['Ds'] and self.pp.MN < (self.pp.masses['Ds']-self.pp.masses[self.lepton]):
                         self.ev.production.readString('Ds -> '+self.lepton+' N')
                         self.ev.production.setPMother(pCharm)
@@ -99,7 +104,8 @@ class HistoHandler():
             wb0 = NFromBMesons.BR3Body(self.pp, 'B0', self.lepton)
             wbs = NFromBMesons.BR3Body(self.pp, 'Bs', self.lepton)
             for b in self.sourceTree:
-                pB = r.TLorentzVector(b.BeautyPx, b.BeautyPy, b.BeautyPz, b.BeautyE)
+                #pB = r.TLorentzVector(b.BeautyPx, b.BeautyPy, b.BeautyPz, b.BeautyE)
+                pB.SetXYZT(b.BeautyPx, b.BeautyPy, b.BeautyPz, b.BeautyE)
                 # B+- can go 2body or 3body
                 if b.BeautyPID == self.pp.particle2id['B'] and (self.pp.masses['B'] - self.pp.masses[self.lepton] - self.pp.masses['D0']) <= self.pp.MN < (self.pp.masses['B'] - self.pp.masses[self.lepton]):
                     self.ev.production.readString('B -> '+self.lepton+' N')
@@ -134,9 +140,9 @@ class HistoHandler():
         # Make it a PDF
         histInt = self.prodHist.Integral("width")
         self.prodHist.Scale(1./histInt)
-        self.prodPDFfilename = self.pp.root_dir_path+'/'+'out/NTuples/prodPDF_m%s_model%s.root'%(self.pp.MN,self.model)
-        self.prodPDFoutfile = r.TFile(self.prodPDFfilename,'recreate')
-        self.prodHist.Write("",5)
+        #self.prodPDFfilename = self.pp.root_dir_path+'/'+'out/NTuples/prodPDF_m%s_model%s.root'%(self.pp.MN,self.model)
+        #self.prodPDFoutfile = r.TFile(self.prodPDFfilename,'recreate')
+        #self.prodHist.Write("",5)
 
     def scaleProductionPDF(self, couplings):
         # Now take the couplings and scale the PDF
@@ -181,13 +187,13 @@ class HistoHandler():
                     self.weightedProdHistVol1.Fill(mom,angle,acc1)
                     self.weightedProdHistVol2.Fill(mom,angle,acc2)
         # Save the PDF
-        self.outFileName = self.pp.root_dir_path+'/'+'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
-        self.weightedPDFoutfile = r.TFile(self.outFileName,'update')
-        if self.accVol1 > 1.e-20 and self.accVol2 > 1.e-20:
-            self.weightedProdHistVol1.Write("",5)
-            self.weightedProdHistVol2.Write("",5)
-        else:
-            self.accVol1, self.accVol2 = 0., 0.
+        #self.outFileName = self.pp.root_dir_path+'/'+'out/NTuples/m%s_couplings%s.root'%(self.pp.MN, self.couplingString)
+        #self.weightedPDFoutfile = r.TFile(self.outFileName,'update')
+        #if self.accVol1 > 1.e-20 and self.accVol2 > 1.e-20:
+        #    self.weightedProdHistVol1.Write("",5)
+        #    self.weightedProdHistVol2.Write("",5)
+        #else:
+        #    self.accVol1, self.accVol2 = 0., 0.
         if self.accVol1 < 1.e-20 and self.accVol2 < 1.e-20:
             self.accVol1, self.accVol2 = 0., 0.
         return self.accVol1, self.accVol2

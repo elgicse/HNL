@@ -102,11 +102,11 @@ def makeSensitivityBelt(root_dir_path, existingData, model, ndivx, ndivy, verbos
         logeps = roundToN(point[1])
         datum = ( logmass, logeps, n)
         if verbose:
-            if not i%250:
+            if not i%1000:
                 print "Point %s of %s: \t log10(mass) %s \t log10(U2) %s \t\t Events: %s"%(i, len(points), logmass, logeps, n)
                 gc.collect()
         data.append(datum)
-        gc.collect()
+        #gc.collect()
     return data
     #return points
 
@@ -184,9 +184,9 @@ if __name__ == '__main__':
     print "Scanning model %s..."%model
     existingData = loadDataFile(model, root_dir_path)
     print 'Loaded %s previous data points.'%len(existingData)
-    #data = makeSensitivityBelt(root_dir_path, existingData, model, 200, 150, verbose)
-    data = makeSensitivityBelt(root_dir_path, existingData, model, 4, 4, verbose)
-    #data3 = []
+    #data = []
+    data = makeSensitivityBelt(root_dir_path, existingData, model, 1000, 800, verbose)
+    #data = makeSensitivityBelt(root_dir_path, existingData, model, 4, 4, verbose)
     existingData = convertToLog(existingData)
     data.extend(existingData)
     gc.collect()
@@ -242,7 +242,11 @@ if __name__ == '__main__':
     pp = physicsParameters()
     for i in xrange(len(bot)):
         gr.SetPoint(i,10.**bot[i][0],pp.factors[model-1]*10.**bot[i][1]) # plot as a function of U^2 tot
-    gr.SetPoint(num,max([10.**x[0] for x in bot]),max([10.**x[1] for x in bot])) #close the plot
+    if bot:
+        gr.SetPoint(num,max([10.**x[0] for x in bot]),max([10.**x[1] for x in bot])) #close the plot
+    else:
+        print 'scan.py WARNING: bot is an empty list!!!!!'
+        gr.SetPoint(num,0.,0.)
 
     # qui provo a smoothare
     logGraphTemp = r.TGraph(len(bot))
@@ -254,7 +258,7 @@ if __name__ == '__main__':
     logGraphSmoother1 = r.TGraphSmooth()
     logGraphSmoother2 = r.TGraphSmooth()
     logGraphSmoother3 = r.TGraphSmooth()
-    logGraphOut1 = logGraphSmoother1.SmoothLowess(logGraphTemp)
+    logGraphOut1 = logGraphSmoother1.SmoothLowess(logGraphTemp) #crashes if input graph has 0 points!
     logGraphOut2 = logGraphSmoother2.SmoothKern(logGraphTemp)
     logGraphOut3 = logGraphSmoother3.SmoothSuper(logGraphTemp)
     cSmooth = r.TCanvas('cSmooth', 'cSmooth')
@@ -301,7 +305,7 @@ if __name__ == '__main__':
     GraphNoErrs3.SetTitle('Super')
     GraphNoErrs3.SetName('Super')
     GraphNoErrs3.Draw('alp')
-
+    cSmooth.Update()
 
 
 

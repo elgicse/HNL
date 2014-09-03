@@ -14,7 +14,7 @@ class HistoHandler():
         # Setup physics
         self.model = model
         self.source = source
-        self.ev = myNEvent(self.pp)#, process)
+        self.ev = myNEvent(self.pp)
         
         if self.model == 1:
             self.lepton = 'e'
@@ -26,9 +26,6 @@ class HistoHandler():
         if self.source == 'charm':
             self.sourceFile = r.TFile(self.pp.root_dir_path+'/'+self.pp.charmSourceFile, 'read')
             self.sourceTree = self.sourceFile.Get(self.pp.sourceTreeName)
-            ## Compute production channels weights
-            #if (self.model == 1 or self.model == 2):
-            #    self.pp.computeProductionWeights(self.lepton)
         elif self.source == 'beauty':
             self.sourceFile = r.TFile(self.pp.root_dir_path+'/'+self.pp.beautySourceFile, 'read')
             self.sourceTree = self.sourceFile.Get(self.pp.sourceTreeName)
